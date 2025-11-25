@@ -51,7 +51,7 @@ export default function Home() {
       <div className="text-center mt-5">
         <h2 className="font-semibold">{user?.username}</h2>
         <p className="text-gray-500">
-          Joined:{" "}
+          Welcome:{" "}
           {new Date(user?.createdAt).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
