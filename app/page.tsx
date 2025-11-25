@@ -32,7 +32,7 @@ export default function Home() {
     try {
       const response = await axios.post("https://authentication-ten-gules.vercel.app/api/log-out");
       toast.success(response.data.message);
-      router.push("/log-in");
+      router.push("/login");
     } catch (error) {
       toast.error("Failed to log out.");
       console.error("Logout error:", error);
