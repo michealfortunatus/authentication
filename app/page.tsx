@@ -12,7 +12,7 @@ export default function Home() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/api/fetch-user")
+      .get("https://authentication-ten-gules.vercel.app/api/fetch-user")
       .then((response) => setUser(response.data.user))
       .catch((error) => console.error("Error fetching user:", error))
       .finally(() => setIsFetchingUser(false)); // Done fetching
@@ -20,7 +20,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!isFetchingUser && user === null) {
-      router.push("/log-in"); // Redirect to login if no user
+      router.push("/login"); // Redirect to login if no user
     }
   }, [isFetchingUser, user, router]);
 
@@ -30,7 +30,7 @@ export default function Home() {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post("http://localhost:3000/api/log-out");
+      const response = await axios.post("https://authentication-ten-gules.vercel.app/api/log-out");
       toast.success(response.data.message);
       router.push("/log-in");
     } catch (error) {
