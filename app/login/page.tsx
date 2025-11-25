@@ -17,7 +17,7 @@ const LoginPage = () => {
 
     try {
       setIsLoading(true);
-      const response = await axios.post("http://localhost:3000/api/log-in", {
+      const response = await axios.post("https://authentication-ten-gules.vercel.app/api/log-in", {
         email,
         password,
       });
