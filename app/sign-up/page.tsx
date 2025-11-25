@@ -19,7 +19,7 @@ const SignUpPage = () => {
     try {
       setIsLoading(true);
       const response = await axios.post(
-        "http://localhost:3000/api/sign-up",
+        "https://authentication-ten-gules.vercel.app/api/sign-up",
         {
           username,
           email,
@@ -97,7 +97,7 @@ const SignUpPage = () => {
         <div className="text-center text-sm mt-6">
           <p>
             Already have an account?{" "}
-            <Link href={"/log-in"} className="text-[#0077b6]">
+            <Link href={"/login"} className="text-[#0077b6]">
               Log in
             </Link>
           </p>
