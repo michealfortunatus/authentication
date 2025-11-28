@@ -21,7 +21,7 @@ A Next.js 14 authentication system with MongoDB, JWT access/refresh tokens, prot
 Email: demo@demo.com
 
 Password: Password123
-Username: Demo User
+
 
 
 ---
@@ -37,7 +37,6 @@ REFRESH_TOKEN_SECRET=your_random_refresh_token_secret
 NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
 
 ---
-
 
 
 
