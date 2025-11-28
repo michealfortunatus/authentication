@@ -68,8 +68,8 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/your-username/appx-auth.git
-cd appx-auth
+git clone https://github.com/your-username/authentication.git
+
 ```
 
 2. **Install dependencies**
@@ -119,14 +119,14 @@ npm run lint         # Run ESLint
 ### Project Structure
 
 ```
-appx-auth/
+authentication/
 ├── app/
 │   ├── api/
 │   │   ├── sign-up/
 │   │   ├── log-in/
 │   │   ├── log-out/
 │   │   └── fetch-user/
-│   ├── dashboard/
+│   ├
 │   ├── login/
 │   └── signup/
 ├── lib/
@@ -378,12 +378,8 @@ NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
 
 ---
 
----
-
 ## License
 
 This project is licensed under the MIT License.
 
 ---
-
- features, setup instructions, API documentation, testing examples, and deployment guide. Let me know if you need any adjustments!
