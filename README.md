@@ -1,3 +1,4 @@
+
 # AppX Authentication System
 
 A Next.js 14 authentication system with MongoDB, JWT access/refresh tokens, protected dashboard, and rate-limited login.
@@ -18,11 +19,10 @@ A Next.js 14 authentication system with MongoDB, JWT access/refresh tokens, prot
 
 ## Demo Credentials
 
+```
 Email: demo@demo.com
-
 Password: Password123
-
-
+```
 
 ---
 
@@ -34,20 +34,356 @@ Create a `.env` file in the root:
 MONGO_URI=your_mongodb_connection_string
 ACCESS_TOKEN_SECRET=your_random_access_token_secret
 REFRESH_TOKEN_SECRET=your_random_refresh_token_secret
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+### How to Get Environment Variables
+
+1. **MongoDB URI**: 
+   - Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+   - Create a cluster and get your connection string
+   - Format: `mongodb+srv://username:password@cluster.mongodb.net/dbname`
+
+2. **Access & Refresh Token Secrets**:
+   - Generate random strings (at least 32 characters)
+   - Use: `openssl rand -base64 32` or any random string generator
+
+3. **Base URL**:
+   - Local: `http://localhost:3000`
+   - Production: `https://your-app.vercel.app`
+
+---
+
+## Local Development Setup
+
+### Prerequisites
+
+- Node.js 18.x or higher
+- npm 9.x or higher
+- MongoDB Atlas account (or local MongoDB)
+- Git
+
+### Installation Steps
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/your-username/appx-auth.git
+cd appx-auth
+```
+
+2. **Install dependencies**
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+3. **Set up environment variables**
+
+Create a `.env.local` file in the root directory:
+
+```env
+MONGO_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/appx-auth
+ACCESS_TOKEN_SECRET=your_super_secret_access_token_key_min_32_chars
+REFRESH_TOKEN_SECRET=your_super_secret_refresh_token_key_min_32_chars
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+4. **Run the development server**
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+```
+
+5. **Open your browser**
+
+Navigate to [http://localhost:3000](http://localhost:3000)
+
+### Development Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+```
+
+### Project Structure
+
+```
+appx-auth/
+├── app/
+│   ├── api/
+│   │   ├── sign-up/
+│   │   ├── log-in/
+│   │   ├── log-out/
+│   │   └── fetch-user/
+│   ├── dashboard/
+│   ├── login/
+│   └── signup/
+├── lib/
+│   ├── db.js           # MongoDB connection
+│   ├── models/         # Mongoose models
+│   └── utils/          # Helper functions
+├── components/
+├── public/
+├── .env.local
+├── next.config.js
+└── package.json
+```
+
+---
+
+## API Endpoints
+
+### Base URL
+- **Local**: `http://localhost:3000`
+- **Production**: `https://your-app.vercel.app`
+
+### Authentication Endpoints
+
+| Method | Endpoint           | Description                       | Auth Required |
+| ------ | ------------------ | --------------------------------- | ------------- |
+| POST   | `/api/sign-up`     | Register new user                 | No            |
+| POST   | `/api/log-in`      | Login user                        | No            |
+| POST   | `/api/log-out`     | Logout user                       | Yes           |
+| GET    | `/api/fetch-user`  | Fetch current logged-in user      | Yes           |
+
+---
+
+### API Request/Response Examples
+
+#### 1. Sign Up
+
+**Endpoint**: `POST /api/sign-up`
+
+**Request Body**:
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "Password123"
+}
+```
+
+**Success Response** (201):
+```json
+{
+  "message": "User created successfully",
+  "user": {
+    "id": "648a1b2c3d4e5f6g7h8i9j0k",
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+```
+
+**Error Response** (400):
+```json
+{
+  "error": "Email already exists"
+}
+```
+
+---
+
+#### 2. Log In
+
+**Endpoint**: `POST /api/log-in`
+
+**Request Body**:
+```json
+{
+  "email": "john@example.com",
+  "password": "Password123"
+}
+```
+
+**Success Response** (200):
+```json
+{
+  "message": "Login successful",
+  "user": {
+    "id": "648a1b2c3d4e5f6g7h8i9j0k",
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+```
+
+**Headers Set**:
+- `Set-Cookie: accessToken=xxx; HttpOnly; Secure; SameSite=Strict; Max-Age=900`
+- `Set-Cookie: refreshToken=xxx; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`
+
+**Error Response** (401):
+```json
+{
+  "error": "Invalid credentials"
+}
+```
+
+**Rate Limit Response** (429):
+```json
+{
+  "error": "Too many login attempts. Please try again later."
+}
+```
+
+---
+
+#### 3. Fetch User
+
+**Endpoint**: `GET /api/fetch-user`
+
+**Headers Required**:
+```
+Cookie: accessToken=xxx
+```
+
+**Success Response** (200):
+```json
+{
+  "user": {
+    "id": "648a1b2c3d4e5f6g7h8i9j0k",
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+```
+
+**Error Response** (401):
+```json
+{
+  "error": "Unauthorized"
+}
+```
+
+---
+
+#### 4. Log Out
+
+**Endpoint**: `POST /api/log-out`
+
+**Headers Required**:
+```
+Cookie: accessToken=xxx; refreshToken=xxx
+```
+
+**Success Response** (200):
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+**Headers Set**:
+- `Set-Cookie: accessToken=; HttpOnly; Secure; SameSite=Strict; Max-Age=0`
+- `Set-Cookie: refreshToken=; HttpOnly; Secure; SameSite=Strict; Max-Age=0`
+
+---
+
+## Testing the API
+
+### Using cURL
+
+**Sign Up**:
+```bash
+curl -X POST http://localhost:3000/api/sign-up \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@test.com","password":"Password123"}'
+```
+
+**Log In**:
+```bash
+curl -X POST http://localhost:3000/api/log-in \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{"email":"test@test.com","password":"Password123"}'
+```
+
+**Fetch User**:
+```bash
+curl -X GET http://localhost:3000/api/fetch-user \
+  -b cookies.txt
+```
+
+**Log Out**:
+```bash
+curl -X POST http://localhost:3000/api/log-out \
+  -b cookies.txt
+```
+
+### Using Postman
+
+1. Import the collection
+2. Set base URL to `http://localhost:3000`
+3. For authenticated requests, Postman will automatically handle cookies after login
+
+---
+
+## Security Features
+
+- **JWT Tokens**: Access tokens expire in 15 minutes, refresh tokens in 7 days
+- **HttpOnly Cookies**: Tokens stored in HttpOnly cookies (not accessible via JavaScript)
+- **Rate Limiting**: 5 login attempts per 15 minutes per IP
+- **Password Hashing**: bcrypt with salt rounds
+- **CORS Protection**: Configured for specific origins
+- **Input Validation**: Server-side validation for all inputs
+
+---
+
+## Deployment
+
+### Deploy to Vercel
+
+1. Push your code to GitHub
+2. Import project on [Vercel](https://vercel.com)
+3. Add environment variables in Vercel dashboard
+4. Deploy
+
+### Environment Variables for Production
+
+```env
+MONGO_URI=your_production_mongodb_uri
+ACCESS_TOKEN_SECRET=your_production_access_secret
+REFRESH_TOKEN_SECRET=your_production_refresh_secret
 NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
+```
 
 ---
 
+## Troubleshooting
 
+### Common Issues
 
-| Method | Endpoint        | Description                  |
-| ------ | --------------- | ---------------------------- |
-| POST   | /api/sign-up    | Register new user            |
-| POST   | /api/log-in     | Login user                   |
-| POST   | /api/log-out    | Logout user                  |
-| GET    | /api/fetch-user | Fetch current logged-in user |
+**Issue**: MongoDB connection error
+- **Solution**: Check your MongoDB URI and ensure IP whitelist includes your IP
 
+**Issue**: JWT token invalid
+- **Solution**: Clear cookies and login again. Check token secrets match.
+
+**Issue**: CORS errors
+- **Solution**: Update `NEXT_PUBLIC_BASE_URL` to match your domain
+
+**Issue**: Rate limiting on local development
+- **Solution**: Wait 15 minutes or restart the server
 
 ---
 
+---
 
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+ features, setup instructions, API documentation, testing examples, and deployment guide. Let me know if you need any adjustments!
