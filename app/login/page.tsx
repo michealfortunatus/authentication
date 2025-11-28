@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import axios from "axios";
 import Link from "next/link";
@@ -14,78 +14,72 @@ const LoginPage = () => {
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
-      setIsLoading(true);
-      const response = await axios.post("https://authentication-ten-gules.vercel.app/api/log-in", {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/log-in`, {
         email,
         password,
       });
 
-      setIsLoading(false);
       toast.success(response.data.message);
-      router.push("/");
+      router.push("/"); // redirect to dashboard/home
     } catch (error: any) {
+      console.error("Login error:", error);
+      toast.error(error.response?.data?.message || "Invalid credentials");
+    } finally {
       setIsLoading(false);
-      console.log("Error in log in: ", error.message);
-      toast.error(error.response.data.message);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-[100vh] py-10  px-4 md:px-6 max-w-[1500px] mx-auto">
-      <div className="bg-white shadow-lg p-10 rounded-xl">
-        <h2 className="font-semibold  text-base md:text-lg text-center">
-          Log in to AppX
-        </h2>
-        <p className="text-gray-700 text-sm mt-1 text-center">
-          Welcome back! Please log in to continue
-        </p>
+    <div className="flex justify-center items-center min-h-[100vh] py-10 px-4">
+      <div className="bg-white shadow-lg p-10 rounded-xl w-full max-w-md">
+        <h2 className="text-center font-semibold text-lg">Log in to AppX</h2>
+        <p className="text-center text-gray-600 mt-1 text-sm">Welcome back! Please log in.</p>
 
-        <form onSubmit={handleLogin} className="mt-6">
-          <div className="flex flex-col text-sm mt-6">
-            <label className="font-[500] mb-1">Email address</label>
+        <form onSubmit={handleLogin} className="mt-6 space-y-5">
+          <div className="flex flex-col">
+            <label className="font-medium mb-1">Email</label>
             <input
               type="email"
-              className="border border-gray-400 px-3 py-1.5 rounded-lg mt-1 text-gray-700 font-[400]"
+              className="border px-3 py-2 rounded-lg"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email address"
+              required
             />
           </div>
 
-          <div className="flex flex-col text-sm mt-6">
-            <label className="font-[500] mb-1">Password</label>
+          <div className="flex flex-col">
+            <label className="font-medium mb-1">Password</label>
             <input
               type="password"
-              className="border border-gray-400 px-3 py-1.5 rounded-lg mt-1 text-gray-700 font-[400]"
+              className="border px-3 py-2 rounded-lg"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              required
             />
           </div>
 
-          <div className="flex justify-center mt-8 w-full">
-            <div className="w-full">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="flex items-center justify-center bg-[#0077b6] rounded-lg px-2 py-2 text-sm font-medium text-gray-50 hover:bg-[#023e8a] w-full md:w-96"
-              >
-                Log in
-              </button>
-            </div>
-          </div>
+          <button
+            type="submit"
+            className={`w-full bg-[#0077b6] text-white py-2 rounded-lg hover:bg-[#023e8a] transition-colors ${
+              isLoading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Log In"}
+          </button>
         </form>
 
-        <div className="text-center text-sm mt-6">
-          <p>
-            Don't have an account?{" "}
-            <Link href={"/sign-up"} className="text-[#0077b6]">
-              Sign up
-            </Link>
-          </p>
-        </div>
+        <p className="text-center text-sm mt-5">
+          Don't have an account?{" "}
+          <Link href="/sign-up" className="text-[#0077b6]">
+            Sign up
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -1,64 +1,74 @@
-"use client";
+'use client';
 
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
+interface User {
+  _id: string;
+  email: string;
+  createdAt: string;
+}
+
 export default function Home() {
-  const [user, setUser] = useState<any>(null); // Default to null
-  const [isFetchingUser, setIsFetchingUser] = useState(true); // Start fetching as true
+  const [user, setUser] = useState<User | null>(null);
+  const [isFetching, setIsFetching] = useState(true);
   const router = useRouter();
 
+  // Fetch user data
   useEffect(() => {
-    axios
-      .get("https://authentication-ten-gules.vercel.app/api/fetch-user")
-      .then((response) => setUser(response.data.user))
-      .catch((error) => console.error("Error fetching user:", error))
-      .finally(() => setIsFetchingUser(false)); // Done fetching
-  }, []);
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/fetch-user`, {
+          withCredentials: true, // ensure cookies are sent
+        });
+        setUser(response.data.user);
+      } catch (error: any) {
+        console.error("Error fetching user:", error);
+        router.push("/login");
+      } finally {
+        setIsFetching(false);
+      }
+    };
 
-  useEffect(() => {
-    if (!isFetchingUser && user === null) {
-      router.push("/login"); // Redirect to login if no user
-    }
-  }, [isFetchingUser, user, router]);
+    fetchUser();
+  }, [router]);
 
-  if (isFetchingUser) {
-    return <p>Loading...</p>; // Show loading while fetching user
-  }
-
+  // Logout function
   const handleLogout = async () => {
     try {
-      const response = await axios.post("https://authentication-ten-gules.vercel.app/api/log-out");
-      toast.success(response.data.message);
+      await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/log-out`, {}, { withCredentials: true });
+      toast.success("Logged out successfully.");
       router.push("/login");
     } catch (error) {
-      toast.error("Failed to log out.");
       console.error("Logout error:", error);
+      toast.error("Failed to log out.");
     }
   };
 
-  return user ? (
-    <div className="max-w-2xl mx-4 sm:max-w-sm md:max-w-sm lg:max-w-sm xl:max-w-sm sm:mx-auto md:mx-auto lg:mx-auto xl:mx-auto mt-16 bg-white shadow-xl rounded-lg text-gray-900">
-      <div className="rounded-t-lg h-32 overflow-hidden">
-        <img
-          className="object-cover object-top w-full"
-          src="https://images.pexels.com/photos/23475/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-          alt="Mountain"
-        />
-      </div>
+  if (isFetching) {
+    return <p className="text-center mt-16">Loading...</p>;
+  }
+
+  if (!user) return null; // Redirect handled in useEffect
+
+  return (
+    <div className="max-w-2xl mx-auto mt-16 bg-white shadow-xl rounded-lg text-gray-900">
+
+
       <div className="text-center mt-5">
-        <h2 className="font-semibold">{user?.username}</h2>
+        <h2 className="font-semibold"> Welcome  {user.email}</h2>
         <p className="text-gray-500">
-          Welcome:{" "}
-          {new Date(user?.createdAt).toLocaleDateString("en-US", {
+          Member since{" "}
+          {new Date(user.createdAt).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric",
           })}
         </p>
       </div>
+
       <div className="p-4 border-t mx-8 mt-2">
         <button
           onClick={handleLogout}
@@ -68,5 +78,5 @@ export default function Home() {
         </button>
       </div>
     </div>
-  ) : null;
+  );
 }

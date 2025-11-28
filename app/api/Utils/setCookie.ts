@@ -1,24 +1,31 @@
+// /Utils/setCookies.ts
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
-export const setCookie = async (userId: any) => {
-  if (!process.env.JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in environment variables.");
-  }
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
 
-  // Generate the token
-  const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
-
-  // Set the cookie
+export const setCookie = async (userId: string) => {
   const cookieStore = await cookies();
-  cookieStore.set("token", token, {
+
+  const accessToken = jwt.sign({ userId }, ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+  const refreshToken = jwt.sign({ userId }, REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
+
+  cookieStore.set("access_token", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+    maxAge: 60 * 15,
+    path: "/",
   });
 
-  return token;
+  cookieStore.set("refresh_token", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 60 * 60 * 24 * 7,
+    path: "/",
+  });
+
+  return { accessToken, refreshToken };
 };
