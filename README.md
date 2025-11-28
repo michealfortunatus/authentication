@@ -1,5 +1,6 @@
 
-# AppX Authentication System
+
+#  Authentication System
 
 A Next.js 14 authentication system with MongoDB, JWT access/refresh tokens, protected dashboard, and rate-limited login.
 
@@ -28,7 +29,7 @@ Password: Password123
 
 ## Environment Variables
 
-Create a `.env` file in the root:
+Create a `.env.local` file in the root:
 
 ```env
 MONGO_URI=your_mongodb_connection_string
@@ -69,7 +70,7 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 ```bash
 git clone https://github.com/your-username/authentication.git
-
+cd authentication
 ```
 
 2. **Install dependencies**
@@ -87,7 +88,7 @@ pnpm install
 Create a `.env.local` file in the root directory:
 
 ```env
-MONGO_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/appx-auth
+MONGO_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/auth-db
 ACCESS_TOKEN_SECRET=your_super_secret_access_token_key_min_32_chars
 REFRESH_TOKEN_SECRET=your_super_secret_refresh_token_key_min_32_chars
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
@@ -116,29 +117,55 @@ npm run start        # Start production server
 npm run lint         # Run ESLint
 ```
 
-### Project Structure
+---
+
+## Project Structure
 
 ```
 authentication/
 ├── app/
 │   ├── api/
-│   │   ├── sign-up/
-│   │   ├── log-in/
-│   │   ├── log-out/
-│   │   └── fetch-user/
-│   ├
-│   ├── login/
-│   └── signup/
-├── lib/
-│   ├── db.js           # MongoDB connection
-│   ├── models/         # Mongoose models
-│   └── utils/          # Helper functions
-├── components/
-├── public/
-├── .env.local
-├── next.config.js
-└── package.json
+│   │   ├── config/          # Configuration files
+│   │   ├── fetch-user/      # GET endpoint to fetch logged-in user
+│   │   ├── log-in/          # POST endpoint for user login
+│   │   ├── log-out/         # POST endpoint for user logout
+│   │   ├── models/          # MongoDB models (User schema)
+│   │   ├── sign-up/         # POST endpoint for user registration
+│   │   └── Utils/           # Utility functions (JWT, validation)
+│   ├── login/               # Login page
+│   ├── sign-up/             # Sign-up page
+│   ├── favicon.ico
+│   ├── globals.css          # Global styles
+│   ├── layout.tsx           # Root layout component
+│   └── page.tsx             # Home page
+├── node_modules/
+├── providers/               # Context providers (Auth, etc.)
+├── public/                  # Static assets
+├── .env.local              # Environment variables (create this)
+├── .gitignore
+├── eslint.config.mjs
+├── middleware.ts           # Next.js middleware for route protection
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── README.md
+└── tsconfig.json
 ```
+
+### Key Directories Explained
+
+- **`app/api/`** - Backend API routes (serverless functions)
+  - **`config/`** - Database connection and app configuration
+  - **`models/`** - Mongoose schemas (User model)
+  - **`Utils/`** - Helper functions (JWT generation, password hashing)
+  - **`fetch-user/`**, **`log-in/`**, **`log-out/`**, **`sign-up/`** - API endpoints
+
+- **`app/login/`** - Login page UI
+- **`app/sign-up/`** - Registration page UI
+- **`middleware.ts`** - Route protection logic (redirects unauthorized users)
+- **`providers/`** - React context providers for global state management
 
 ---
 
@@ -290,6 +317,51 @@ Cookie: accessToken=xxx; refreshToken=xxx
 
 ---
 
+## File Structure Details
+
+### API Routes (`app/api/`)
+
+```
+api/
+├── config/
+│   └── db.ts              # MongoDB connection setup
+├── models/
+│   └── User.ts            # User schema (name, email, password)
+├── Utils/
+│   ├── jwt.ts             # JWT token generation & verification
+│   ├── hash.ts            # Password hashing with bcrypt
+│   └── validation.ts      # Input validation helpers
+├── sign-up/
+│   └── route.ts           # POST handler for registration
+├── log-in/
+│   └── route.ts           # POST handler for login (with rate limiting)
+├── log-out/
+│   └── route.ts           # POST handler for logout
+└── fetch-user/
+    └── route.ts           # GET handler to fetch current user
+```
+
+### Pages (`app/`)
+
+```
+app/
+├── login/
+│   └── page.tsx           # Login form UI
+├── sign-up/
+│   └── page.tsx           # Registration form UI
+├── layout.tsx             # Root layout with providers
+├── page.tsx               # Landing/home page
+└── globals.css            # TailwindCSS styles
+```
+
+### Middleware (`middleware.ts`)
+
+Protects routes by checking for valid access tokens:
+- Redirects unauthenticated users to `/login`
+- Allows access to public routes (`/`, `/login`, `/sign-up`)
+
+---
+
 ## Testing the API
 
 ### Using cURL
@@ -337,6 +409,7 @@ curl -X POST http://localhost:3000/api/log-out \
 - **Password Hashing**: bcrypt with salt rounds
 - **CORS Protection**: Configured for specific origins
 - **Input Validation**: Server-side validation for all inputs
+- **Middleware Protection**: Automatic route protection via Next.js middleware
 
 ---
 
@@ -346,17 +419,14 @@ curl -X POST http://localhost:3000/api/log-out \
 
 1. Push your code to GitHub
 2. Import project on [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
+3. Add environment variables in Vercel dashboard:
+   ```env
+   MONGO_URI=your_production_mongodb_uri
+   ACCESS_TOKEN_SECRET=your_production_access_secret
+   REFRESH_TOKEN_SECRET=your_production_refresh_secret
+   NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
+   ```
 4. Deploy
-
-### Environment Variables for Production
-
-```env
-MONGO_URI=your_production_mongodb_uri
-ACCESS_TOKEN_SECRET=your_production_access_secret
-REFRESH_TOKEN_SECRET=your_production_refresh_secret
-NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
-```
 
 ---
 
@@ -365,16 +435,32 @@ NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
 ### Common Issues
 
 **Issue**: MongoDB connection error
-- **Solution**: Check your MongoDB URI and ensure IP whitelist includes your IP
+- **Solution**: Check your MongoDB URI and ensure IP whitelist includes your IP (or allow all: `0.0.0.0/0`)
 
 **Issue**: JWT token invalid
-- **Solution**: Clear cookies and login again. Check token secrets match.
+- **Solution**: Clear cookies and login again. Verify `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` match in `.env.local`
 
 **Issue**: CORS errors
 - **Solution**: Update `NEXT_PUBLIC_BASE_URL` to match your domain
 
 **Issue**: Rate limiting on local development
-- **Solution**: Wait 15 minutes or restart the server
+- **Solution**: Wait 15 minutes or restart the server to reset rate limits
+
+**Issue**: TypeScript errors
+- **Solution**: Run `npm install` to ensure all types are installed
+
+---
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Database**: MongoDB with Mongoose
+- **Authentication**: JWT (jsonwebtoken)
+- **Password Hashing**: bcrypt
+- **Styling**: Tailwind CSS
+- **Rate Limiting**: Custom middleware
+
 
 ---
 
@@ -382,4 +468,3 @@ NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
 
 This project is licensed under the MIT License.
 
----
