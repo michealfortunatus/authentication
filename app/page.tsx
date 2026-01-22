@@ -39,7 +39,7 @@ export default function LMSDashboard() {
     const fetchUser = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/fetch-user`,
+          `/api/fetch-user`,
           { withCredentials: true }
         );
         setUser(res.data.user);
@@ -66,7 +66,7 @@ export default function LMSDashboard() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/log-out`,
+        `/api/log-out`,
         {},
         { withCredentials: true }
       );
