@@ -17,7 +17,7 @@ const SignUpPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/sign-up`, {
+      const response = await axios.post(`/api/sign-up`, {
 
         email,
         password,

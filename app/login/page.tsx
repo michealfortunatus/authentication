@@ -17,7 +17,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/log-in`, {
+      const response = await axios.post(`/api/log-in`, {
         email,
         password,
       });
