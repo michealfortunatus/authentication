@@ -64,7 +64,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     axios
-      .get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/fetch-user`, {
+      .get(`/api/fetch-user`, {
         withCredentials: true,
       })
       .then((res) => setUser(res.data.user))
@@ -119,7 +119,7 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/log-out`,
+        `/api/log-out`,
         {},
         { withCredentials: true }
       );
