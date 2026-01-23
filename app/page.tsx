@@ -71,10 +71,25 @@ export default function DashboardPage() {
   /** 👇 Compute status on frontend */
   const learnersWithStatus = useMemo(() => {
     if (!data) return [];
-    return data.learners.map((l) => ({
-      ...l,
-      status: l.avg_score >= PASS_MARK ? "passed" : "failed",
-    }));
+    return data.learners.map((l) => {
+      let status = "registered";
+
+      // if score exists, set pass/fail
+      if (typeof l.avg_score === "number") {
+        status = l.avg_score >= PASS_MARK ? "passed" : "failed";
+      }
+
+      // if not passed/failed, decide based on hours_spent
+      if (status === "registered") {
+        if (l.hours_spent === 0) status = "enrolled";
+        if (l.hours_spent > 0) status = "in_progress";
+      }
+
+      return {
+        ...l,
+        status,
+      };
+    });
   }, [data]);
 
   /** 👇 Filtering */
@@ -143,7 +158,7 @@ export default function DashboardPage() {
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
       {/* Header */}
-      <h1 className="text-2xl font-bold">LearnPress Analytics Dashboard</h1>
+      <h1 className="text-2xl font-bold">Renaissance Analytics Dashboard</h1>
       <p className="text-sm text-gray-500">Welcome, {user?.email}</p>
 
       {/* Controls */}
@@ -169,7 +184,7 @@ export default function DashboardPage() {
       {/* Learners Summary */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded shadow">
-          <p className="text-sm text-gray-500">Total Enrolled</p>
+          <p className="text-sm text-gray-500">Total Students</p>
           <p className="text-2xl font-bold">{totalStudents}</p>
         </div>
         <div className="bg-white p-4 rounded shadow">
