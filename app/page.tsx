@@ -182,6 +182,40 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-white p-6 rounded shadow h-80">
+          <h2 className="font-semibold mb-4">Learner Status (Pie)</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data?.pieChart || []}
+                dataKey="value"
+                nameKey="name"
+                outerRadius={90}
+              >
+                {(data?.pieChart || []).map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-white p-6 rounded shadow h-80">
+          <h2 className="font-semibold mb-4">Learner Status (Bar)</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data?.barChart || []}>
+              <XAxis dataKey="label" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
       {/* Learners Table */}
       <div className="bg-white p-6 rounded shadow">
         <div className="flex justify-between mb-4">
@@ -191,6 +225,10 @@ export default function DashboardPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="all">All</option>
+            <option value="registered">Registered</option>
+            <option value="enrolled">Enrolled</option>
+            <option value="not_started">Not Started</option>
+            <option value="in_progress">In Progress</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
           </select>
