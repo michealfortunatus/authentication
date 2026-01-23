@@ -57,7 +57,7 @@ export default function LMSDashboard() {
   useEffect(() => {
     if (!user) return;
 
-    fetch(`https://your-site.com?filter=${filter}`)
+    fetch(`https://renaissance.genzaar.app/?filter=${filter}`)
       .then(res => res.json())
       .then(json => setData(json));
   }, [filter, user]);
