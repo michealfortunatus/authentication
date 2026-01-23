@@ -22,35 +22,37 @@ import Papa from "papaparse";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-/* ================= TYPES ================= */
-
 type Learner = {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  score: number;
-  status: "passed" | "failed";
+  status: string;
+  attempts: number;
+  avg_score: number;
   hours_spent: number;
 };
 
 type DashboardData = {
   metrics: {
     pass_mark: number;
-    total_enrolled: number;
-    total_passed: number;
-    total_failed: number;
+    avg_score: number;
+    avg_hours_spent: number;
+    attempts: number;
+    passed: number;
+    in_progress: number;
+    first_attempt_pass: number;
+    second_attempt_pass: number;
+    avg_pass_score: number;
   };
   pieChart: { name: string; value: number }[];
   barChart: { label: string; value: number }[];
   learners: Learner[];
 };
 
-const COLORS = ["#16a34a", "#dc2626"];
+const COLORS = ["#2563eb", "#16a34a", "#eab308", "#f97316", "#dc2626"];
 
 const API_URL =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/analytics";
-
-/* ================= COMPONENT ================= */
 
 export default function DashboardPage() {
   const [user, setUser] = useState<{ email: string } | null>(null);
@@ -60,30 +62,28 @@ export default function DashboardPage() {
 
   const router = useRouter();
 
-  /* ---------- Auth ---------- */
   useEffect(() => {
     axios
-      .get(`/api/fetch-user`, { withCredentials: true })
+      .get(`/api/fetch-user`, {
+        withCredentials: true,
+      })
       .then((res) => setUser(res.data.user))
       .catch(() => router.push("/login"));
   }, [router]);
 
-  /* ---------- Dashboard Data ---------- */
   useEffect(() => {
     fetch(`${API_URL}?days=${days}`)
       .then((res) => res.json())
       .then((json: DashboardData) => setData(json))
-      .catch(() => toast.error("Failed to load dashboard data"));
+      .catch(() => toast.error("Failed to fetch dashboard data"));
   }, [days]);
 
-  /* ---------- Filters ---------- */
   const filteredLearners = useMemo(() => {
     if (!data) return [];
     if (statusFilter === "all") return data.learners;
     return data.learners.filter((l) => l.status === statusFilter);
   }, [data, statusFilter]);
 
-  /* ---------- Exports ---------- */
   const downloadCSV = () => {
     const csv = Papa.unparse(filteredLearners);
     const blob = new Blob([csv], { type: "text/csv" });
@@ -97,45 +97,51 @@ export default function DashboardPage() {
 
   const downloadPDF = () => {
     const doc = new jsPDF();
-    doc.text("Learners Report", 14, 16);
 
-    (doc as any).autoTable({
-      startY: 24,
-      head: [["Name", "Email", "Score", "Status", "Hours Spent"]],
-      body: filteredLearners.map((l) => [
-        l.name,
-        l.email,
-        `${l.score}%`,
-        l.status,
-        l.hours_spent,
-      ]),
-    });
+    doc.text("Learners Report", 14, 16);
+     (doc as any).autoTable({
+  startY: 24,
+  head: [["Name", "Email", "Status", "Attempts", "Avg Score", "Hours Spent"]],
+  body: filteredLearners.map((l) => [
+    l.name,
+    l.email,
+    l.status,
+    l.attempts,
+    l.avg_score,
+    l.hours_spent,
+  ]),
+});
+
 
     doc.save("learners-report.pdf");
   };
 
-  /* ---------- Logout ---------- */
   const handleLogout = async () => {
     try {
-      await axios.post(`/api/log-out`, {}, { withCredentials: true });
-      toast.success("Logged out successfully");
+      await axios.post(
+        `/api/log-out`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success("Logged out successfully.");
       router.push("/login");
     } catch {
-      toast.error("Logout failed");
+      toast.error("Failed to log out.");
     }
   };
-
-  /* ================= UI ================= */
 
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
       {/* Header */}
       <div className="space-y-3">
-        <h1 className="text-2xl font-bold">LearnPress Analytics Dashboard</h1>
+        <h1 className="text-2xl font-bold">
+          LearnPress Analytics Dashboard
+        </h1>
 
+        {/* Filter + Logout */}
         <div className="flex flex-col sm:flex-row gap-3">
           <select
-            className="border px-3 py-2 rounded"
+            className="border px-3 py-2 rounded w-full sm:w-auto"
             value={days}
             onChange={(e) => setDays(e.target.value)}
           >
@@ -146,13 +152,14 @@ export default function DashboardPage() {
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded"
+            className="flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 w-full sm:w-auto"
           >
             <LogOut size={16} />
             Logout
           </button>
         </div>
 
+        {/* Welcome */}
         <p className="text-sm text-gray-500">
           Welcome, {user?.email || "User"}
         </p>
@@ -161,14 +168,26 @@ export default function DashboardPage() {
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { title: "Pass Mark", value: `${data?.metrics.pass_mark ?? 80}%` },
-          { title: "Total Enrolled", value: data?.metrics.total_enrolled },
-          { title: "Passed", value: data?.metrics.total_passed },
-          { title: "Failed", value: data?.metrics.total_failed },
+          {
+            title: "Pass Mark",
+            value: data?.metrics?.pass_mark ? `${data.metrics.pass_mark}%` : "—",
+          },
+          {
+            title: "Avg Score",
+            value: data?.metrics?.avg_score ? `${data.metrics.avg_score}%` : "—",
+          },
+          {
+            title: "Avg Hours Spent",
+            value: data?.metrics?.avg_hours_spent ?? "—",
+          },
+          {
+            title: "Attempts",
+            value: data?.metrics?.attempts ?? "—",
+          },
         ].map((item, i) => (
           <div key={i} className="bg-white p-4 rounded shadow">
-            <p className="text-sm text-gray-500">{item.title}</p>
-            <p className="text-2xl font-bold">{item.value ?? "—"}</p>
+            <p className="text-gray-500 text-sm">{item.title}</p>
+            <p className="text-2xl font-bold">{item.value}</p>
           </div>
         ))}
       </div>
@@ -176,10 +195,15 @@ export default function DashboardPage() {
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded shadow h-80">
-          <h2 className="font-semibold mb-4">Pass vs Fail</h2>
+          <h2 className="font-semibold mb-4">Learner Status (Pie)</h2>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={data?.pieChart || []} dataKey="value" nameKey="name">
+              <Pie
+                data={data?.pieChart || []}
+                dataKey="value"
+                nameKey="name"
+                outerRadius={90}
+              >
                 {(data?.pieChart || []).map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
@@ -190,7 +214,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="bg-white p-6 rounded shadow h-80">
-          <h2 className="font-semibold mb-4">Learner Distribution</h2>
+          <h2 className="font-semibold mb-4">Learner Status (Bar)</h2>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data?.barChart || []}>
               <XAxis dataKey="label" />
@@ -204,68 +228,64 @@ export default function DashboardPage() {
 
       {/* Learners Table */}
       <div className="bg-white p-6 rounded shadow">
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
-          <div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
             <h2 className="font-semibold">Learners</h2>
-            <p className="text-sm text-gray-500">
-              Enrolled: {data?.metrics.total_enrolled} | Passed:{" "}
-              {data?.metrics.total_passed} | Failed:{" "}
-              {data?.metrics.total_failed}
-            </p>
-          </div>
 
-          <div className="flex gap-2">
+            {/* Learner Filter */}
             <select
-              className="border px-3 py-2 rounded"
+              className="border px-3 py-2 rounded w-full md:w-auto"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="all">All</option>
+              <option value="registered">Registered</option>
+              <option value="enrolled">Enrolled</option>
+              <option value="not_started">Not Started</option>
+              <option value="in_progress">In Progress</option>
               <option value="passed">Passed</option>
               <option value="failed">Failed</option>
             </select>
+          </div>
 
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button
               onClick={downloadCSV}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded"
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded w-full sm:w-auto"
             >
-              <Download size={16} /> CSV
+              <Download size={16} />
+              Export CSV
             </button>
 
             <button
               onClick={downloadPDF}
-              className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded"
+              className="flex items-center justify-center gap-2 bg-gray-800 text-white px-4 py-2 rounded w-full sm:w-auto"
             >
-              <FileText size={16} /> PDF
+              <FileText size={16} />
+              Export PDF
             </button>
           </div>
         </div>
 
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b">
-              <th className="py-2 text-left">Name</th>
+            <tr className="border-b text-left">
+              <th className="py-2">Name</th>
               <th>Email</th>
-              <th>Score</th>
               <th>Status</th>
+              <th>Attempts</th>
+              <th>Avg Score</th>
               <th>Hours Spent</th>
             </tr>
           </thead>
           <tbody>
-            {filteredLearners.map((l) => (
-              <tr key={l.id} className="border-b">
+            {filteredLearners.map((l, i) => (
+              <tr key={i} className="border-b">
                 <td className="py-2">{l.name}</td>
                 <td>{l.email}</td>
-                <td>{l.score}%</td>
-                <td
-                  className={
-                    l.status === "passed"
-                      ? "text-green-600 font-semibold"
-                      : "text-red-600 font-semibold"
-                  }
-                >
-                  {l.status}
-                </td>
+                <td>{l.status}</td>
+                <td>{l.attempts}</td>
+                <td>{l.avg_score}%</td>
                 <td>{l.hours_spent}</td>
               </tr>
             ))}
