@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import {
   PieChart,
   Pie,
@@ -12,7 +15,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Download } from "lucide-react";
+import { Download, LogOut } from "lucide-react";
 import Papa from "papaparse";
 
 type ChartItem = {
@@ -51,14 +54,43 @@ const API_URL =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/analytics";
 
 export default function DashboardPage() {
+  const [user, setUser] = useState<{ email: string } | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const [days, setDays] = useState("90");
 
+  const router = useRouter();
+
+  // Fetch user
+  useEffect(() => {
+    axios
+      .get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/fetch-user`, {
+        withCredentials: true,
+      })
+      .then((res) => setUser(res.data.user))
+      .catch(() => router.push("/login"));
+  }, [router]);
+
+  // Fetch dashboard data
   useEffect(() => {
     fetch(`${API_URL}?days=${days}`)
       .then((res) => res.json())
       .then((json: DashboardData) => setData(json));
   }, [days]);
+
+  // Logout
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/log-out`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success("Logged out successfully.");
+      router.push("/login");
+    } catch {
+      toast.error("Failed to log out.");
+    }
+  };
 
   const downloadCSV = () => {
     const csv = Papa.unparse(data?.learners || []);
@@ -75,17 +107,30 @@ export default function DashboardPage() {
     <div className="p-8 bg-gray-50 min-h-screen space-y-8">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">LearnPress Analytics Dashboard</h1>
+        <div>
+          <h1 className="text-2xl font-bold">LearnPress Analytics Dashboard</h1>
+          <p className="text-sm text-gray-500">Welcome, {user?.email || "User"}</p>
+        </div>
 
-        <select
-          className="border px-3 py-2 rounded"
-          value={days}
-          onChange={(e) => setDays(e.target.value)}
-        >
-          <option value="90">Last 3 Months</option>
-          <option value="7">Last Week</option>
-          <option value="1">Last 24 Hours</option>
-        </select>
+        <div className="flex items-center gap-4">
+          <select
+            className="border px-3 py-2 rounded"
+            value={days}
+            onChange={(e) => setDays(e.target.value)}
+          >
+            <option value="90">Last 3 Months</option>
+            <option value="7">Last Week</option>
+            <option value="1">Last 24 Hours</option>
+          </select>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Metrics */}
