@@ -22,23 +22,23 @@ import Papa from "papaparse";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+/* ================= TYPES ================= */
+
 type Learner = {
   id: number;
   name: string;
   email: string;
-  status: "passed" | "failed";
   score: number;
+  status: "passed" | "failed";
   hours_spent: number;
 };
 
 type DashboardData = {
   metrics: {
     pass_mark: number;
-    avg_score: number;
-    avg_hours_spent: number;
-    enrolled: number;
-    passed: number;
-    failed: number;
+    total_enrolled: number;
+    total_passed: number;
+    total_failed: number;
   };
   pieChart: { name: string; value: number }[];
   barChart: { label: string; value: number }[];
@@ -50,6 +50,8 @@ const COLORS = ["#16a34a", "#dc2626"];
 const API_URL =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/analytics";
 
+/* ================= COMPONENT ================= */
+
 export default function DashboardPage() {
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
@@ -58,6 +60,7 @@ export default function DashboardPage() {
 
   const router = useRouter();
 
+  /* ---------- Auth ---------- */
   useEffect(() => {
     axios
       .get(`/api/fetch-user`, { withCredentials: true })
@@ -65,23 +68,27 @@ export default function DashboardPage() {
       .catch(() => router.push("/login"));
   }, [router]);
 
+  /* ---------- Dashboard Data ---------- */
   useEffect(() => {
     fetch(`${API_URL}?days=${days}`)
       .then((res) => res.json())
-      .then((json) => setData(json))
-      .catch(() => toast.error("Failed to fetch dashboard data"));
+      .then((json: DashboardData) => setData(json))
+      .catch(() => toast.error("Failed to load dashboard data"));
   }, [days]);
 
+  /* ---------- Filters ---------- */
   const filteredLearners = useMemo(() => {
     if (!data) return [];
     if (statusFilter === "all") return data.learners;
     return data.learners.filter((l) => l.status === statusFilter);
   }, [data, statusFilter]);
 
+  /* ---------- Exports ---------- */
   const downloadCSV = () => {
     const csv = Papa.unparse(filteredLearners);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
+
     const a = document.createElement("a");
     a.href = url;
     a.download = "learners.csv";
@@ -94,12 +101,12 @@ export default function DashboardPage() {
 
     (doc as any).autoTable({
       startY: 24,
-      head: [["Name", "Email", "Status", "Score (%)", "Hours Spent"]],
+      head: [["Name", "Email", "Score", "Status", "Hours Spent"]],
       body: filteredLearners.map((l) => [
         l.name,
         l.email,
+        `${l.score}%`,
         l.status,
-        l.score,
         l.hours_spent,
       ]),
     });
@@ -107,15 +114,18 @@ export default function DashboardPage() {
     doc.save("learners-report.pdf");
   };
 
+  /* ---------- Logout ---------- */
   const handleLogout = async () => {
     try {
       await axios.post(`/api/log-out`, {}, { withCredentials: true });
       toast.success("Logged out successfully");
       router.push("/login");
     } catch {
-      toast.error("Failed to log out");
+      toast.error("Logout failed");
     }
   };
+
+  /* ================= UI ================= */
 
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
@@ -138,7 +148,8 @@ export default function DashboardPage() {
             onClick={handleLogout}
             className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded"
           >
-            <LogOut size={16} /> Logout
+            <LogOut size={16} />
+            Logout
           </button>
         </div>
 
@@ -149,48 +160,61 @@ export default function DashboardPage() {
 
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Metric title="Pass Mark" value={`${data?.metrics.pass_mark ?? 0}%`} />
-        <Metric title="Avg Score" value={`${data?.metrics.avg_score ?? 0}%`} />
-        <Metric
-          title="Avg Hours Spent"
-          value={data?.metrics.avg_hours_spent ?? 0}
-        />
-        <Metric title="Total Enrolled" value={data?.metrics.enrolled ?? 0} />
+        {[
+          { title: "Pass Mark", value: `${data?.metrics.pass_mark ?? 80}%` },
+          { title: "Total Enrolled", value: data?.metrics.total_enrolled },
+          { title: "Passed", value: data?.metrics.total_passed },
+          { title: "Failed", value: data?.metrics.total_failed },
+        ].map((item, i) => (
+          <div key={i} className="bg-white p-4 rounded shadow">
+            <p className="text-sm text-gray-500">{item.title}</p>
+            <p className="text-2xl font-bold">{item.value ?? "—"}</p>
+          </div>
+        ))}
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <ChartBox title="Learner Status (Pie)">
-          <PieChart>
-            <Pie
-              data={data?.pieChart || []}
-              dataKey="value"
-              nameKey="name"
-              outerRadius={90}
-            >
-              {(data?.pieChart || []).map((_, i) => (
-                <Cell key={i} fill={COLORS[i]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ChartBox>
+        <div className="bg-white p-6 rounded shadow h-80">
+          <h2 className="font-semibold mb-4">Pass vs Fail</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={data?.pieChart || []} dataKey="value" nameKey="name">
+                {(data?.pieChart || []).map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
-        <ChartBox title="Learner Status (Bar)">
-          <BarChart data={data?.barChart || []}>
-            <XAxis dataKey="label" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" />
-          </BarChart>
-        </ChartBox>
+        <div className="bg-white p-6 rounded shadow h-80">
+          <h2 className="font-semibold mb-4">Learner Distribution</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data?.barChart || []}>
+              <XAxis dataKey="label" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      {/* Learners */}
-      <div className="bg-white p-6 rounded shadow space-y-4">
-        <div className="flex flex-wrap justify-between gap-4">
-          <div className="flex gap-4 items-center">
+      {/* Learners Table */}
+      <div className="bg-white p-6 rounded shadow">
+        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
+          <div>
             <h2 className="font-semibold">Learners</h2>
+            <p className="text-sm text-gray-500">
+              Enrolled: {data?.metrics.total_enrolled} | Passed:{" "}
+              {data?.metrics.total_passed} | Failed:{" "}
+              {data?.metrics.total_failed}
+            </p>
+          </div>
+
+          <div className="flex gap-2">
             <select
               className="border px-3 py-2 rounded"
               value={statusFilter}
@@ -200,15 +224,14 @@ export default function DashboardPage() {
               <option value="passed">Passed</option>
               <option value="failed">Failed</option>
             </select>
-          </div>
 
-          <div className="flex gap-2">
             <button
               onClick={downloadCSV}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded"
             >
               <Download size={16} /> CSV
             </button>
+
             <button
               onClick={downloadPDF}
               className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded"
@@ -218,25 +241,14 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Summary */}
-        <div className="flex gap-6 text-sm">
-          <span>Total: {data?.metrics.enrolled ?? 0}</span>
-          <span className="text-green-600">
-            Passed: {data?.metrics.passed ?? 0}
-          </span>
-          <span className="text-red-600">
-            Failed: {data?.metrics.failed ?? 0}
-          </span>
-        </div>
-
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b">
               <th className="py-2 text-left">Name</th>
               <th>Email</th>
+              <th>Score</th>
               <th>Status</th>
-              <th>Score (%)</th>
-              <th>Hours</th>
+              <th>Hours Spent</th>
             </tr>
           </thead>
           <tbody>
@@ -244,49 +256,22 @@ export default function DashboardPage() {
               <tr key={l.id} className="border-b">
                 <td className="py-2">{l.name}</td>
                 <td>{l.email}</td>
+                <td>{l.score}%</td>
                 <td
                   className={
                     l.status === "passed"
-                      ? "text-green-600"
-                      : "text-red-600"
+                      ? "text-green-600 font-semibold"
+                      : "text-red-600 font-semibold"
                   }
                 >
                   {l.status}
                 </td>
-                <td>{l.score}%</td>
                 <td>{l.hours_spent}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </div>
-  );
-}
-
-/* Helpers */
-function Metric({ title, value }: { title: string; value: any }) {
-  return (
-    <div className="bg-white p-4 rounded shadow">
-      <p className="text-gray-500 text-sm">{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
-    </div>
-  );
-}
-
-function ChartBox({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-white p-6 rounded shadow h-80">
-      <h2 className="font-semibold mb-4">{title}</h2>
-      <ResponsiveContainer width="100%" height="100%">
-        {children}
-      </ResponsiveContainer>
     </div>
   );
 }
