@@ -87,9 +87,9 @@ export default function LMSDashboard() {
     a.click();
   };
 
-  if (isFetching || !data) {
-    return <p className="text-center mt-16">Loading Dashboard...</p>;
-  }
+  // if (isFetching || !data) {
+  //   return <p className="text-center mt-16">Loading Dashboard...</p>;
+  // }
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
