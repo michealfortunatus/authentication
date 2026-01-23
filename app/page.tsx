@@ -60,7 +60,6 @@ export default function DashboardPage() {
 
   const router = useRouter();
 
-  // Fetch user
   useEffect(() => {
     axios
       .get(`/api/fetch-user`, {
@@ -70,21 +69,15 @@ export default function DashboardPage() {
       .catch(() => router.push("/login"));
   }, [router]);
 
-  // Fetch dashboard data
   useEffect(() => {
     fetch(`${API_URL}?days=${days}`)
       .then((res) => res.json())
       .then((json: DashboardData) => setData(json));
   }, [days]);
 
-  // Logout
   const handleLogout = async () => {
     try {
-      await axios.post(
-        `/api/log-out`,
-        {},
-        { withCredentials: true }
-      );
+      await axios.post(`/api/log-out`, {}, { withCredentials: true });
       toast.success("Logged out successfully.");
       router.push("/login");
     } catch {
@@ -104,37 +97,44 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen space-y-8">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">LearnPress Analytics Dashboard</h1>
-          <p className="text-sm text-gray-500">Welcome, {user?.email || "User"}</p>
-        </div>
+      <div className="space-y-3">
+        <h1 className="text-2xl font-bold">
+          LearnPress Analytics Dashboard
+        </h1>
 
-        <div className="flex items-center gap-4">
-          <select
-            className="border px-3 py-2 rounded"
-            value={days}
-            onChange={(e) => setDays(e.target.value)}
-          >
-            <option value="90">Last 3 Months</option>
-            <option value="7">Last Week</option>
-            <option value="1">Last 24 Hours</option>
-          </select>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          {/* filter + logout */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <select
+              className="border px-3 py-2 rounded w-full sm:w-auto"
+              value={days}
+              onChange={(e) => setDays(e.target.value)}
+            >
+              <option value="90">Last 3 Months</option>
+              <option value="7">Last Week</option>
+              <option value="1">Last 24 Hours</option>
+            </select>
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 w-full sm:w-auto"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          </div>
+
+          {/* welcome */}
+          <p className="text-sm text-gray-500 w-full md:w-auto">
+            Welcome, {user?.email || "User"}
+          </p>
         </div>
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           {
             title: "Pass Mark",
@@ -161,7 +161,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded shadow h-80">
           <h2 className="font-semibold mb-4">Learner Status (Pie)</h2>
           <ResponsiveContainer width="100%" height="100%">
