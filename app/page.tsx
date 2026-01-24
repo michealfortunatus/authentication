@@ -22,30 +22,38 @@ import Papa from "papaparse";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+/* =======================
+   TYPES
+======================= */
 type Learner = {
   id: string;
   name: string;
   email: string;
-  avg_score: number;
-  hours_spent: number;
+  status: string;
+  score: number;
+  hours_spent: number | null;
 };
 
 type DashboardData = {
   metrics: {
     pass_mark: number;
+    passed: number;
+    failed: number;
+    in_progress: number;
   };
   pieChart: { name: string; value: number }[];
   barChart: { label: string; value: number }[];
   learners: Learner[];
 };
 
-const PASS_MARK = 80;
-
-const COLORS = ["#16a34a", "#dc2626"];
+const COLORS = ["#16a34a", "#dc2626", "#2563eb", "#f59e0b", "#6b7280"];
 
 const API_URL =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/analytics";
 
+/* =======================
+   COMPONENT
+======================= */
 export default function DashboardPage() {
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
@@ -54,6 +62,9 @@ export default function DashboardPage() {
 
   const router = useRouter();
 
+  /* =======================
+     AUTH CHECK
+  ======================= */
   useEffect(() => {
     axios
       .get(`/api/fetch-user`, { withCredentials: true })
@@ -61,6 +72,9 @@ export default function DashboardPage() {
       .catch(() => router.push("/login"));
   }, [router]);
 
+  /* =======================
+     FETCH DASHBOARD DATA
+  ======================= */
   useEffect(() => {
     fetch(`${API_URL}?days=${days}`)
       .then((res) => res.json())
@@ -68,55 +82,40 @@ export default function DashboardPage() {
       .catch(() => toast.error("Failed to fetch dashboard data"));
   }, [days]);
 
-  /** 👇 Compute status on frontend */
-  const learnersWithStatus = useMemo(() => {
-    if (!data) return [];
-    return data.learners.map((l) => {
-      let status = "registered";
+  /* =======================
+     USE API DATA DIRECTLY
+  ======================= */
+  const learners = useMemo(() => data?.learners || [], [data]);
 
-      // if score exists, set pass/fail
-      if (typeof l.avg_score === "number") {
-        status = l.avg_score >= PASS_MARK ? "passed" : "failed";
-      }
-
-      // if not passed/failed, decide based on hours_spent
-      if (status === "registered") {
-        if (l.hours_spent === 0) status = "enrolled";
-        if (l.hours_spent > 0) status = "in_progress";
-      }
-
-      return {
-        ...l,
-        status,
-      };
-    });
-  }, [data]);
-
-  /** 👇 Filtering */
+  /* =======================
+     FILTERING
+  ======================= */
   const filteredLearners = useMemo(() => {
-    if (statusFilter === "all") return learnersWithStatus;
-    return learnersWithStatus.filter((l) => l.status === statusFilter);
-  }, [learnersWithStatus, statusFilter]);
+    if (statusFilter === "all") return learners;
+    return learners.filter((l) => l.status === statusFilter);
+  }, [learners, statusFilter]);
 
-  /** 👇 Summary counts */
-  const totalStudents = learnersWithStatus.length;
-  const passedCount = learnersWithStatus.filter(
-    (l) => l.status === "passed"
-  ).length;
-  const failedCount = learnersWithStatus.filter(
-    (l) => l.status === "failed"
-  ).length;
+  /* =======================
+     SUMMARY COUNTS
+  ======================= */
+  const totalStudents = learners.length;
+  const passedCount = learners.filter((l) => l.status === "passed").length;
+  const failedCount = learners.filter((l) => l.status === "failed").length;
 
+  /* =======================
+     EXPORTS
+  ======================= */
   const downloadCSV = () => {
     const csv = Papa.unparse(
       filteredLearners.map((l) => ({
         name: l.name,
         email: l.email,
         status: l.status,
-        score: l.avg_score,
-        hours_spent: l.hours_spent,
+        score: l.score,
+        hours_spent: l.hours_spent ?? 0,
       }))
     );
+
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
 
@@ -137,14 +136,17 @@ export default function DashboardPage() {
         l.name,
         l.email,
         l.status.toUpperCase(),
-        `${l.avg_score}%`,
-        l.hours_spent,
+        `${l.score}%`,
+        l.hours_spent ?? 0,
       ]),
     });
 
     doc.save("learners-report.pdf");
   };
 
+  /* =======================
+     LOGOUT
+  ======================= */
   const handleLogout = async () => {
     try {
       await axios.post(`/api/log-out`, {}, { withCredentials: true });
@@ -155,6 +157,9 @@ export default function DashboardPage() {
     }
   };
 
+  /* =======================
+     RENDER
+  ======================= */
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
       {/* Header */}
@@ -181,7 +186,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Learners Summary */}
+      {/* Summary */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded shadow">
           <p className="text-sm text-gray-500">Total Students</p>
@@ -242,7 +247,6 @@ export default function DashboardPage() {
             <option value="all">All</option>
             <option value="registered">Registered</option>
             <option value="enrolled">Enrolled</option>
-            <option value="not_started">Not Started</option>
             <option value="in_progress">In Progress</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
@@ -284,14 +288,16 @@ export default function DashboardPage() {
                     className={`px-2 py-1 text-xs rounded font-semibold ${
                       l.status === "passed"
                         ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        : l.status === "failed"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-gray-100 text-gray-700"
                     }`}
                   >
                     {l.status.toUpperCase()}
                   </span>
                 </td>
-                <td>{l.avg_score}%</td>
-                <td>{l.hours_spent}</td>
+                <td>{l.score}%</td>
+                <td>{l.hours_spent ?? 0}</td>
               </tr>
             ))}
           </tbody>
