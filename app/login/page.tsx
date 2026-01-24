@@ -35,7 +35,7 @@ const LoginPage = () => {
   return (
     <div className="flex justify-center items-center min-h-[100vh] py-10 px-4">
       <div className="bg-white shadow-lg p-10 rounded-xl w-full max-w-md">
-        <h2 className="text-center font-semibold text-lg">Log in to AppX</h2>
+        <h2 className="text-center font-semibold text-lg">Log in </h2>
         <p className="text-center text-gray-600 mt-1 text-sm">Welcome back! Please log in.</p>
 
         <form onSubmit={handleLogin} className="mt-6 space-y-5">
