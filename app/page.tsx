@@ -278,8 +278,7 @@ export default function DashboardPage() {
               setPage(1);
             }}
           >
-            <option value="all">All</option>
-            <option value="enrolled">Enrolled</option>
+            <option value="all">Enrolled</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
           </select>
