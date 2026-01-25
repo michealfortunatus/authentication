@@ -40,13 +40,15 @@ type DashboardData = {
     passed: number;
     failed: number;
     in_progress: number;
+    enrolled: number;
+    registered: number;
   };
   pieChart: { name: string; value: number }[];
   barChart: { label: string; value: number }[];
   learners: Learner[];
 };
 
-const COLORS = ["#16a34a", "#dc2626", "#2563eb", "#f59e0b", "#6b7280"];
+const COLORS = ["#16a34a", "#dc2626", "#2563eb", "#f59e0b", "#6b7280", "#8b5cf6"];
 
 const API_URL =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/analytics";
@@ -99,6 +101,9 @@ export default function DashboardPage() {
      SUMMARY COUNTS
   ======================= */
   const totalStudents = learners.length;
+  const registeredCount = learners.filter((l) => l.status === "registered").length;
+  const enrolledCount = learners.filter((l) => l.status === "enrolled").length;
+  const inProgressCount = learners.filter((l) => l.status === "in_progress").length;
   const passedCount = learners.filter((l) => l.status === "passed").length;
   const failedCount = learners.filter((l) => l.status === "failed").length;
 
@@ -187,10 +192,22 @@ export default function DashboardPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
         <div className="bg-white p-4 rounded shadow">
           <p className="text-sm text-gray-500">Total Students</p>
           <p className="text-2xl font-bold">{totalStudents}</p>
+        </div>
+        <div className="bg-white p-4 rounded shadow">
+          <p className="text-sm text-gray-500">Registered</p>
+          <p className="text-2xl font-bold">{registeredCount}</p>
+        </div>
+        <div className="bg-white p-4 rounded shadow">
+          <p className="text-sm text-gray-500">Enrolled</p>
+          <p className="text-2xl font-bold">{enrolledCount}</p>
+        </div>
+        <div className="bg-white p-4 rounded shadow">
+          <p className="text-sm text-gray-500">In Progress</p>
+          <p className="text-2xl font-bold">{inProgressCount}</p>
         </div>
         <div className="bg-white p-4 rounded shadow">
           <p className="text-sm text-gray-500">Passed</p>
