@@ -258,7 +258,7 @@ export default function DashboardPage() {
       <div className="bg-white p-6 rounded shadow">
         <div className="flex justify-between mb-4">
           <div className="flex gap-2">
-            <Search size={16} className="mt-2" />
+            {/* <Search size={16} className="mt-2" /> */}
             <input
               value={search}
               onChange={(e) => {
@@ -279,7 +279,7 @@ export default function DashboardPage() {
             }}
           >
             <option value="all">All</option>
-            <option value="all">Enrolled</option>
+            <option value="enrolled">Enrolled</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
           </select>
@@ -307,7 +307,7 @@ export default function DashboardPage() {
               <th>Email</th>
               <th>Status</th>
               <th>Score</th>
-              <th>Attempts</th>
+              {/* <th>Attempts</th> */}
             </tr>
           </thead>
           <tbody>
