@@ -111,7 +111,8 @@ export default function DashboardPage() {
   }, [page, statusFilter, search]);
 
   const registeredCount = registeredData?.metrics.registered ?? 0;
-  const enrolledCount = registeredData?.metrics.enrolled ?? 0;
+  const enrolledCount = enrolledData?.metrics.total_students ?? 0;
+
 
   const passedCount = enrolledData?.metrics.passed ?? 0;
   const failedCount = enrolledData?.metrics.failed ?? 0;
@@ -202,27 +203,29 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded shadow">
-          <p className="text-sm text-gray-500">Registered</p>
-          <p className="text-2xl font-bold">{registeredCount}</p>
-        </div>
+      {/* Summary */}
+<div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+  {/* <div className="bg-white p-4 rounded shadow">
+    <p className="text-sm text-gray-500">Registered</p>
+    <p className="text-2xl font-bold">{registeredCount}</p>
+  </div> */}
 
-        <div className="bg-white p-4 rounded shadow">
-          <p className="text-sm text-gray-500">Enrolled</p>
-          <p className="text-2xl font-bold">{enrolledCount}</p>
-        </div>
+  <div className="bg-white p-4 rounded shadow">
+    <p className="text-sm text-gray-500">Enrolled</p>
+    <p className="text-2xl font-bold">{enrolledCount}</p>
+  </div>
 
-        <div className="bg-white p-4 rounded shadow">
-          <p className="text-sm text-gray-500">Passed</p>
-          <p className="text-2xl font-bold text-green-600">{passedCount}</p>
-        </div>
+  <div className="bg-white p-4 rounded shadow">
+    <p className="text-sm text-gray-500">Passed</p>
+    <p className="text-2xl font-bold text-green-600">{passedCount}</p>
+  </div>
 
-        <div className="bg-white p-4 rounded shadow">
-          <p className="text-sm text-gray-500">Failed</p>
-          <p className="text-2xl font-bold text-red-600">{failedCount}</p>
-        </div>
-      </div>
+  <div className="bg-white p-4 rounded shadow">
+    <p className="text-sm text-gray-500">Failed</p>
+    <p className="text-2xl font-bold text-red-600">{failedCount}</p>
+  </div>
+</div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded shadow h-80">
@@ -276,6 +279,7 @@ export default function DashboardPage() {
             }}
           >
             <option value="all">All</option>
+            <option value="all">Enrolled</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
           </select>
@@ -323,7 +327,7 @@ export default function DashboardPage() {
                   </span>
                 </td>
                 <td>{l.score}%</td>
-                <td>{l.attempts ?? 0}</td>
+                {/* <td>{l.attempts ?? 0}</td> */}
               </tr>
             ))}
           </tbody>
