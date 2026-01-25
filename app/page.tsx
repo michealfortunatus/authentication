@@ -17,7 +17,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { Download, FileText, LogOut } from "lucide-react";
+import { Download, FileText, LogOut, Search } from "lucide-react";
 import Papa from "papaparse";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -31,8 +31,8 @@ type Learner = {
   email: string;
   status: string;
   score: number;
-  attempts: number;
   hours_spent: number | null;
+  attempts?: number;
 };
 
 type DashboardData = {
@@ -49,14 +49,7 @@ type DashboardData = {
   learners: Learner[];
 };
 
-const COLORS = [
-  "#16a34a",
-  "#dc2626",
-  "#2563eb",
-  "#f59e0b",
-  "#6b7280",
-  "#8b5cf6",
-];
+const COLORS = ["#16a34a", "#dc2626", "#2563eb", "#f59e0b", "#6b7280", "#8b5cf6"];
 
 const API_URL =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/analytics";
@@ -69,6 +62,11 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [days, setDays] = useState("90");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // NEW STATES
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const perPage = 20;
 
   const router = useRouter();
 
@@ -86,35 +84,75 @@ export default function DashboardPage() {
      FETCH DASHBOARD DATA
   ======================= */
   useEffect(() => {
-    const url = `${API_URL}?days=${days}&status=${statusFilter}`;
-    fetch(url)
+    fetch(`${API_URL}?days=${days}`)
       .then((res) => res.json())
       .then((json: DashboardData) => setData(json))
       .catch(() => toast.error("Failed to fetch dashboard data"));
-  }, [days, statusFilter]);
+  }, [days]);
 
+  /* =======================
+     USE API DATA DIRECTLY
+  ======================= */
   const learners = useMemo(() => data?.learners || [], [data]);
 
   /* =======================
-     SUMMARY COUNTS (FROM API)
+     FILTERING
   ======================= */
-  const registeredCount = data?.metrics.registered ?? 0;
-  const enrolledCount = data?.metrics.enrolled ?? 0;
-  const inProgressCount = data?.metrics.in_progress ?? 0;
-  const passedCount = data?.metrics.passed ?? 0;
-  const failedCount = data?.metrics.failed ?? 0;
+  const filteredLearners = useMemo(() => {
+    let list = learners;
+
+    // status filter
+    if (statusFilter !== "all") {
+      list = list.filter((l) => l.status === statusFilter);
+    }
+
+    // search filter
+    if (search.trim() !== "") {
+      const query = search.toLowerCase();
+      list = list.filter(
+        (l) =>
+          l.name.toLowerCase().includes(query) ||
+          l.email.toLowerCase().includes(query)
+      );
+    }
+
+    return list;
+  }, [learners, statusFilter, search]);
+
+  /* =======================
+     PAGINATION
+  ======================= */
+  const totalPages = Math.ceil(filteredLearners.length / perPage);
+
+  const paginatedLearners = useMemo(() => {
+    const start = (page - 1) * perPage;
+    return filteredLearners.slice(start, start + perPage);
+  }, [filteredLearners, page]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(1);
+  }, [totalPages]);
+
+  /* =======================
+     SUMMARY COUNTS
+  ======================= */
+  const registeredCount = learners.filter((l) => l.status === "registered").length;
+  const enrolledCount = learners.filter((l) => l.status === "enrolled").length;
+  const completedCount = learners.filter((l) => l.status === "completed").length;
+  const inProgressCount = learners.filter((l) => l.status === "in_progress").length;
+  const passedCount = learners.filter((l) => l.status === "passed").length;
+  const failedCount = learners.filter((l) => l.status === "failed").length;
 
   /* =======================
      EXPORTS
   ======================= */
   const downloadCSV = () => {
     const csv = Papa.unparse(
-      learners.map((l) => ({
+      filteredLearners.map((l) => ({
         name: l.name,
         email: l.email,
         status: l.status,
         score: l.score,
-        attempts: l.attempts,
         hours_spent: l.hours_spent ?? 0,
       }))
     );
@@ -134,13 +172,12 @@ export default function DashboardPage() {
 
     (doc as any).autoTable({
       startY: 24,
-      head: [["Name", "Email", "Status", "Score", "Attempts", "Hours Spent"]],
-      body: learners.map((l) => [
+      head: [["Name", "Email", "Status", "Score", "Hours Spent"]],
+      body: filteredLearners.map((l) => [
         l.name,
         l.email,
         l.status.toUpperCase(),
         `${l.score}%`,
-        l.attempts ?? 0,
         l.hours_spent ?? 0,
       ]),
     });
@@ -201,6 +238,10 @@ export default function DashboardPage() {
           <p className="text-2xl font-bold">{enrolledCount}</p>
         </div>
         <div className="bg-white p-4 rounded shadow">
+          <p className="text-sm text-gray-500">Completed</p>
+          <p className="text-2xl font-bold">{completedCount}</p>
+        </div>
+        <div className="bg-white p-4 rounded shadow">
           <p className="text-sm text-gray-500">In Progress</p>
           <p className="text-2xl font-bold">{inProgressCount}</p>
         </div>
@@ -251,6 +292,16 @@ export default function DashboardPage() {
       {/* Learners Table */}
       <div className="bg-white p-6 rounded shadow">
         <div className="flex justify-between mb-4">
+          <div className="flex gap-2">
+            <Search size={16} className="mt-2" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name or email..."
+              className="border px-3 py-2 rounded w-64"
+            />
+          </div>
+
           <select
             className="border px-3 py-2 rounded"
             value={statusFilter}
@@ -288,11 +339,10 @@ export default function DashboardPage() {
               <th>Status</th>
               <th>Score</th>
               <th>Attempts</th>
-              <th>Hours Spent</th>
             </tr>
           </thead>
           <tbody>
-            {learners.map((l, i) => (
+            {paginatedLearners.map((l, i) => (
               <tr key={i} className="border-b">
                 <td className="py-2">{l.name}</td>
                 <td>{l.email}</td>
@@ -311,11 +361,33 @@ export default function DashboardPage() {
                 </td>
                 <td>{l.score}%</td>
                 <td>{l.attempts ?? 0}</td>
-                <td>{l.hours_spent ?? 0}</td>
               </tr>
             ))}
           </tbody>
         </table>
+
+        {/* PAGINATION */}
+        <div className="flex justify-between mt-4">
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(p - 1, 1))}
+            className="bg-gray-200 px-4 py-2 rounded"
+          >
+            Prev
+          </button>
+
+          <div className="text-sm">
+            Page {page} of {totalPages}
+          </div>
+
+          <button
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+            className="bg-gray-200 px-4 py-2 rounded"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
