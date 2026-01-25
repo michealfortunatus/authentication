@@ -31,6 +31,7 @@ type Learner = {
   email: string;
   status: string;
   score: number;
+  attempts: number;
   hours_spent: number | null;
 };
 
@@ -48,7 +49,14 @@ type DashboardData = {
   learners: Learner[];
 };
 
-const COLORS = ["#16a34a", "#dc2626", "#2563eb", "#f59e0b", "#6b7280", "#8b5cf6"];
+const COLORS = [
+  "#16a34a",
+  "#dc2626",
+  "#2563eb",
+  "#f59e0b",
+  "#6b7280",
+  "#8b5cf6",
+];
 
 const API_URL =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/analytics";
@@ -78,45 +86,35 @@ export default function DashboardPage() {
      FETCH DASHBOARD DATA
   ======================= */
   useEffect(() => {
-    fetch(`${API_URL}?days=${days}`)
+    const url = `${API_URL}?days=${days}&status=${statusFilter}`;
+    fetch(url)
       .then((res) => res.json())
       .then((json: DashboardData) => setData(json))
       .catch(() => toast.error("Failed to fetch dashboard data"));
-  }, [days]);
+  }, [days, statusFilter]);
 
-  /* =======================
-     USE API DATA DIRECTLY
-  ======================= */
   const learners = useMemo(() => data?.learners || [], [data]);
 
   /* =======================
-     FILTERING
+     SUMMARY COUNTS (FROM API)
   ======================= */
-  const filteredLearners = useMemo(() => {
-    if (statusFilter === "all") return learners;
-    return learners.filter((l) => l.status === statusFilter);
-  }, [learners, statusFilter]);
-
-  /* =======================
-     SUMMARY COUNTS
-  ======================= */
-  const totalStudents = learners.length;
-  const registeredCount = learners.filter((l) => l.status === "registered").length;
-  const enrolledCount = learners.filter((l) => l.status === "enrolled").length;
-  const inProgressCount = learners.filter((l) => l.status === "in_progress").length;
-  const passedCount = learners.filter((l) => l.status === "passed").length;
-  const failedCount = learners.filter((l) => l.status === "failed").length;
+  const registeredCount = data?.metrics.registered ?? 0;
+  const enrolledCount = data?.metrics.enrolled ?? 0;
+  const inProgressCount = data?.metrics.in_progress ?? 0;
+  const passedCount = data?.metrics.passed ?? 0;
+  const failedCount = data?.metrics.failed ?? 0;
 
   /* =======================
      EXPORTS
   ======================= */
   const downloadCSV = () => {
     const csv = Papa.unparse(
-      filteredLearners.map((l) => ({
+      learners.map((l) => ({
         name: l.name,
         email: l.email,
         status: l.status,
         score: l.score,
+        attempts: l.attempts,
         hours_spent: l.hours_spent ?? 0,
       }))
     );
@@ -136,12 +134,13 @@ export default function DashboardPage() {
 
     (doc as any).autoTable({
       startY: 24,
-      head: [["Name", "Email", "Status", "Score", "Hours Spent"]],
-      body: filteredLearners.map((l) => [
+      head: [["Name", "Email", "Status", "Score", "Attempts", "Hours Spent"]],
+      body: learners.map((l) => [
         l.name,
         l.email,
         l.status.toUpperCase(),
         `${l.score}%`,
+        l.attempts ?? 0,
         l.hours_spent ?? 0,
       ]),
     });
@@ -193,10 +192,6 @@ export default function DashboardPage() {
 
       {/* Summary */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-        <div className="bg-white p-4 rounded shadow">
-          <p className="text-sm text-gray-500">Total Students</p>
-          <p className="text-2xl font-bold">{totalStudents}</p>
-        </div>
         <div className="bg-white p-4 rounded shadow">
           <p className="text-sm text-gray-500">Registered</p>
           <p className="text-2xl font-bold">{registeredCount}</p>
@@ -292,11 +287,12 @@ export default function DashboardPage() {
               <th>Email</th>
               <th>Status</th>
               <th>Score</th>
+              <th>Attempts</th>
               <th>Hours Spent</th>
             </tr>
           </thead>
           <tbody>
-            {filteredLearners.map((l, i) => (
+            {learners.map((l, i) => (
               <tr key={i} className="border-b">
                 <td className="py-2">{l.name}</td>
                 <td>{l.email}</td>
@@ -314,6 +310,7 @@ export default function DashboardPage() {
                   </span>
                 </td>
                 <td>{l.score}%</td>
+                <td>{l.attempts ?? 0}</td>
                 <td>{l.hours_spent ?? 0}</td>
               </tr>
             ))}
