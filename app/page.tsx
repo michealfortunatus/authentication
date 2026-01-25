@@ -245,9 +245,9 @@ export default function DashboardPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="all">All</option>
-            {/* <option value="registered">Registered</option> */}
-            {/* <option value="enrolled">Enrolled</option> */}
-            {/* <option value="in_progress">In Progress</option> */}
+            <option value="registered">Registered</option>
+            <option value="enrolled">Enrolled</option>
+            <option value="in_progress">In Progress</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
           </select>
