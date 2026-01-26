@@ -17,36 +17,34 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { Download, FileText, LogOut, Search } from "lucide-react";
+import { Download, FileText, LogOut } from "lucide-react";
 import Papa from "papaparse";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+
+/* ================= TYPES ================= */
 
 type Learner = {
   id: string;
   name: string;
   email: string;
-  status: string;
+  status: "passed" | "failed" | "in_progress";
   score: number;
-  hours_spent: number | null;
-  attempts?: number;
+
+  attempts: number;
+  time_spent: number; // seconds
+  progress_percentage: number;
+  last_activity: string;
 };
 
 type RegisteredResponse = {
   metrics: {
-    pass_mark: number;
-    passed: number;
-    failed: number;
-    in_progress: number;
-    enrolled: number;
     registered: number;
   };
-  learners: Learner[];
 };
 
 type EnrolledResponse = {
   metrics: {
-    total_students: number;
     passed: number;
     failed: number;
     pass_mark: number;
@@ -60,7 +58,9 @@ type EnrolledResponse = {
   };
 };
 
-const COLORS = ["#16a34a", "#dc2626", "#2563eb", "#f59e0b"];
+/* ================= CONSTANTS ================= */
+
+const COLORS = ["#2563eb", "#16a34a", "#dc2626"];
 
 const REGISTERED_API =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/registered";
@@ -68,36 +68,50 @@ const REGISTERED_API =
 const ENROLLED_API =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/enrolled";
 
-export default function DashboardPage() {
-  const [user, setUser] = useState<{ email: string } | null>(null);
+/* ================= HELPERS ================= */
 
+const formatTime = (seconds: number) => {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return `${h}h ${m}m`;
+};
+
+/* ================= COMPONENT ================= */
+
+export default function DashboardPage() {
+  const router = useRouter();
+
+  const [user, setUser] = useState<{ email: string } | null>(null);
   const [registeredData, setRegisteredData] =
     useState<RegisteredResponse | null>(null);
-  const [enrolledData, setEnrolledData] = useState<EnrolledResponse | null>(
-    null
-  );
+  const [enrolledData, setEnrolledData] =
+    useState<EnrolledResponse | null>(null);
 
-  const [days, setDays] = useState("90");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
 
   const perPage = 20;
-  const router = useRouter();
+
+  /* ================= AUTH ================= */
 
   useEffect(() => {
     axios
-      .get(`/api/fetch-user`, { withCredentials: true })
+      .get("/api/fetch-user", { withCredentials: true })
       .then((res) => setUser(res.data.user))
       .catch(() => router.push("/login"));
   }, [router]);
 
+  /* ================= REGISTERED ================= */
+
   useEffect(() => {
-    fetch(`${REGISTERED_API}?page=1&per_page=1`)
+    fetch(`${REGISTERED_API}`)
       .then((res) => res.json())
-      .then((json: RegisteredResponse) => setRegisteredData(json))
+      .then(setRegisteredData)
       .catch(() => toast.error("Failed to fetch registered data"));
   }, []);
+
+  /* ================= ENROLLED ================= */
 
   useEffect(() => {
     const url = `${ENROLLED_API}?page=${page}&per_page=${perPage}&status=${statusFilter}&search=${encodeURIComponent(
@@ -106,20 +120,27 @@ export default function DashboardPage() {
 
     fetch(url)
       .then((res) => res.json())
-      .then((json: EnrolledResponse) => setEnrolledData(json))
+      .then(setEnrolledData)
       .catch(() => toast.error("Failed to fetch enrolled data"));
   }, [page, statusFilter, search]);
 
+  /* ================= METRICS ================= */
+
   const registeredCount = registeredData?.metrics.registered ?? 0;
-  const enrolledCount = enrolledData?.metrics.total_students ?? 0;
-
-
   const passedCount = enrolledData?.metrics.passed ?? 0;
   const failedCount = enrolledData?.metrics.failed ?? 0;
 
-  const learners = useMemo(() => enrolledData?.learners || [], [enrolledData]);
+  // IMPORTANT: enrolled = passed + failed
+  const enrolledCount = passedCount + failedCount;
+
+  const learners = useMemo(
+    () => enrolledData?.learners ?? [],
+    [enrolledData]
+  );
 
   const totalPages = enrolledData?.pagination.total_pages ?? 1;
+
+  /* ================= EXPORTS ================= */
 
   const downloadCSV = () => {
     const csv = Papa.unparse(
@@ -128,8 +149,10 @@ export default function DashboardPage() {
         email: l.email,
         status: l.status,
         score: l.score,
-        hours_spent: l.hours_spent ?? 0,
-        attempts: l.attempts ?? 0,
+        attempts: l.attempts,
+        progress_percentage: l.progress_percentage,
+        time_spent_seconds: l.time_spent,
+        last_activity: l.last_activity,
       }))
     );
 
@@ -148,19 +171,32 @@ export default function DashboardPage() {
 
     (doc as any).autoTable({
       startY: 24,
-      head: [["Name", "Email", "Status", "Score", "Hours Spent", "Attempts"]],
+      head: [
+        [
+          "Name",
+          "Email",
+          "Status",
+          "Score",
+          "Attempts",
+          "Completion %",
+          "Last Activity",
+        ],
+      ],
       body: learners.map((l) => [
         l.name,
         l.email,
         l.status.toUpperCase(),
         `${l.score}%`,
-        l.hours_spent ?? 0,
-        l.attempts ?? 0,
+        l.attempts,
+        `${l.progress_percentage}%`,
+        l.last_activity,
       ]),
     });
 
     doc.save("learners-report.pdf");
   };
+
+  /* ================= CHART ================= */
 
   const chartData = [
     { name: "Registered", value: registeredCount },
@@ -169,106 +205,63 @@ export default function DashboardPage() {
     { name: "Failed", value: failedCount },
   ];
 
+  /* ================= LOGOUT ================= */
+
   const handleLogout = async () => {
-    try {
-      await axios.post(`/api/log-out`, {}, { withCredentials: true });
-      toast.success("Logged out successfully.");
-      router.push("/login");
-    } catch {
-      toast.error("Failed to log out.");
-    }
+    await axios.post("/api/log-out", {}, { withCredentials: true });
+    router.push("/login");
   };
 
+  /* ================= UI ================= */
+
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
+    <div className="p-6 bg-gray-50 min-h-screen space-y-6">
       <h1 className="text-2xl font-bold">Renaissance Analytics Dashboard</h1>
       <p className="text-sm text-gray-500">Welcome, {user?.email}</p>
 
-      <div className="flex gap-3">
-        <select
-          className="border px-3 py-2 rounded"
-          value={days}
-          onChange={(e) => setDays(e.target.value)}
-        >
-          <option value="90">Last 3 Months</option>
-          <option value="7">Last Week</option>
-          <option value="1">Last 24 Hours</option>
-        </select>
-
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded"
-        >
-          <LogOut size={16} /> Logout
-        </button>
+      {/* SUMMARY */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Summary title="Registered" value={registeredCount} />
+        <Summary title="Enrolled" value={enrolledCount} />
+        <Summary title="Passed" value={passedCount} green />
+        <Summary title="Failed" value={failedCount} red />
       </div>
 
-      {/* Summary */}
-<div className="grid grid-cols-3 md:grid-cols-5 gap-4">
-  {/* <div className="bg-white p-4 rounded shadow">
-    <p className="text-sm text-gray-500">Registered</p>
-    <p className="text-2xl font-bold">{registeredCount}</p>
-  </div> */}
+      {/* CHARTS */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <ChartBox title="Learner Status (Pie)">
+          <PieChart>
+            <Pie data={chartData} dataKey="value" nameKey="name" outerRadius={90}>
+              {chartData.map((_, i) => (
+                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ChartBox>
 
-  <div className="bg-white p-4 rounded shadow">
-    <p className="text-sm text-gray-500">Enrolled</p>
-    <p className="text-2xl font-bold">{enrolledCount}</p>
-  </div>
-
-  <div className="bg-white p-4 rounded shadow">
-    <p className="text-sm text-gray-500">Passed</p>
-    <p className="text-2xl font-bold text-green-600">{passedCount}</p>
-  </div>
-
-  <div className="bg-white p-4 rounded shadow">
-    <p className="text-sm text-gray-500">Failed</p>
-    <p className="text-2xl font-bold text-red-600">{failedCount}</p>
-  </div>
-</div>
-
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded shadow h-80">
-          <h2 className="font-semibold mb-4">Learner Status (Pie)</h2>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={chartData} dataKey="value" nameKey="name" outerRadius={90}>
-                {chartData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white p-6 rounded shadow h-80">
-          <h2 className="font-semibold mb-4">Learner Status (Bar)</h2>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <ChartBox title="Learner Status (Bar)">
+          <BarChart data={chartData}>
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="value" />
+          </BarChart>
+        </ChartBox>
       </div>
 
+      {/* TABLE */}
       <div className="bg-white p-6 rounded shadow">
         <div className="flex justify-between mb-4">
-          <div className="flex gap-2">
-            {/* <Search size={16} className="mt-2" /> */}
-            <input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Search name or email..."
-              className="border px-3 py-2 rounded w-64"
-            />
-          </div>
+          <input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search name or email..."
+            className="border px-3 py-2 rounded w-64"
+          />
 
           <select
             className="border px-3 py-2 rounded"
@@ -284,16 +277,10 @@ export default function DashboardPage() {
           </select>
 
           <div className="flex gap-2">
-            <button
-              onClick={downloadCSV}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
+            <button onClick={downloadCSV} className="btn-blue">
               <Download size={16} /> CSV
             </button>
-            <button
-              onClick={downloadPDF}
-              className="bg-gray-800 text-white px-4 py-2 rounded"
-            >
+            <button onClick={downloadPDF} className="btn-dark">
               <FileText size={16} /> PDF
             </button>
           </div>
@@ -301,59 +288,101 @@ export default function DashboardPage() {
 
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b text-left">
-              <th className="py-2">Name</th>
+            <tr className="border-b">
+              <th>Name</th>
               <th>Email</th>
               <th>Status</th>
               <th>Score</th>
-              {/* <th>Attempts</th> */}
+              <th>Attempts</th>
+              <th>Completion</th>
+              <th>Time Spent</th>
+              <th>Last Activity</th>
             </tr>
           </thead>
+
           <tbody>
-            {learners.map((l, i) => (
-              <tr key={i} className="border-b">
-                <td className="py-2">{l.name}</td>
+            {learners.map((l) => (
+              <tr key={l.id} className="border-b">
+                <td>{l.name}</td>
                 <td>{l.email}</td>
-                <td>
-                  <span
-                    className={`px-2 py-1 text-xs rounded font-semibold ${
-                      l.status === "passed"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {l.status.toUpperCase()}
-                  </span>
-                </td>
+                <td>{l.status.toUpperCase()}</td>
                 <td>{l.score}%</td>
-                {/* <td>{l.attempts ?? 0}</td> */}
+                <td>{l.attempts}</td>
+                <td>{l.progress_percentage}%</td>
+                <td>{formatTime(l.time_spent)}</td>
+                <td>{new Date(l.last_activity).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
+        {/* PAGINATION */}
         <div className="flex justify-between mt-4">
           <button
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            className="bg-gray-200 px-4 py-2 rounded"
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
           >
             Prev
           </button>
-
-          <div className="text-sm">
+          <span>
             Page {page} of {totalPages}
-          </div>
-
+          </span>
           <button
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-            className="bg-gray-200 px-4 py-2 rounded"
+            disabled={page === totalPages}
+            onClick={() => setPage((p) => p + 1)}
           >
             Next
           </button>
         </div>
       </div>
+
+      <button onClick={handleLogout} className="btn-red">
+        <LogOut size={16} /> Logout
+      </button>
+    </div>
+  );
+}
+
+/* ================= SMALL COMPONENTS ================= */
+
+function Summary({
+  title,
+  value,
+  green,
+  red,
+}: {
+  title: string;
+  value: number;
+  green?: boolean;
+  red?: boolean;
+}) {
+  return (
+    <div className="bg-white p-4 rounded shadow">
+      <p className="text-sm text-gray-500">{title}</p>
+      <p
+        className={`text-2xl font-bold ${
+          green ? "text-green-600" : red ? "text-red-600" : ""
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ChartBox({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-white p-6 rounded shadow h-80">
+      <h2 className="font-semibold mb-4">{title}</h2>
+      <ResponsiveContainer width="100%" height="100%">
+        {children}
+      </ResponsiveContainer>
     </div>
   );
 }
