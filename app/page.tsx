@@ -30,6 +30,10 @@ type Learner = {
   score: number;
   hours_spent: number | null;
   attempts?: number;
+  // 🔹 ADD (dynamic fields from API)
+progress_percentage?: number;
+last_activity?: string;
+
 };
 
 type RegisteredResponse = {
@@ -130,6 +134,9 @@ export default function DashboardPage() {
         score: l.score,
         hours_spent: l.hours_spent ?? 0,
         attempts: l.attempts ?? 0,
+        // 🔹 ADD
+    progress_percentage: l.progress_percentage ?? 0,
+    last_activity: l.last_activity ?? "",
       }))
     );
 
@@ -148,7 +155,7 @@ export default function DashboardPage() {
 
     (doc as any).autoTable({
       startY: 24,
-      head: [["Name", "Email", "Status", "Score", "Hours Spent", "Attempts"]],
+      head: [["Name", "Email", "Status", "Score", "Hours Spent", "Attempts","Completion %", "Last Activity"]],
       body: learners.map((l) => [
         l.name,
         l.email,
@@ -156,6 +163,9 @@ export default function DashboardPage() {
         `${l.score}%`,
         l.hours_spent ?? 0,
         l.attempts ?? 0,
+        // 🔹 ADD
+  `${l.progress_percentage ?? 0}%`,
+  l.last_activity ?? "-",
       ]),
     });
 
@@ -306,9 +316,9 @@ export default function DashboardPage() {
               <th>Email</th>
               <th>Status</th>
               <th>Score</th>
-              {/* <th>Attempts</th>
+              <th>Attempts</th>
               <th>Completion %</th>
-              <th>Last Activity</th> */}
+              <th>Last Activity</th>
             </tr>
           </thead>
           <tbody>
@@ -328,7 +338,10 @@ export default function DashboardPage() {
                   </span>
                 </td>
                 <td>{l.score}%</td>
-                {/* <td>{l.attempts ?? 0}</td> */}
+                <td>{l.attempts ?? 0}</td>
+                <td>{l.progress_percentage ?? 0}%</td>
+                <td>{l.last_activity ?? "-"}</td>
+
               </tr>
             ))}
           </tbody>
