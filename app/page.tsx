@@ -65,7 +65,7 @@ type EnrolledResponse = {
   };
 };
 
-const COLORS = ["#16a34a", "#dc2626", "#2563eb", "#f59e0b"];
+const COLORS = ["#dc2626", "#2563eb",  "#16a34a", "#f59e0b"];
 
 const REGISTERED_API =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/registered";
