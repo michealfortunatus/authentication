@@ -53,7 +53,7 @@ type EnrolledResponse = {
     total_students: number;
     passed: number;
     failed: number;
-    inprogress: number;
+    in_progress: number;
     pass_mark: number;
   };
   learners: Learner[];
@@ -115,7 +115,7 @@ export default function DashboardPage() {
       .catch(() => toast.error("Failed to fetch enrolled data"));
   }, [page, statusFilter, search]);
 
-  const inprogressCount = enrolledData?.metrics.inprogress ?? 0;
+  const inprogressCount = enrolledData?.metrics.in_progress ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
 
 
