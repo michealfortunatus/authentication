@@ -345,15 +345,20 @@ export default function DashboardPage() {
                 <td className="py-2">{l.name}</td>
                 <td>{l.email}</td>
                 <td>
-                  <span
-                    className={`px-2 py-1 text-xs rounded font-semibold ${
-                      l.status === "passed"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {l.status.toUpperCase()}
-                  </span>
+                   <span
+  className={`px-2 py-1 text-xs rounded font-semibold ${
+    l.status === "passed"
+      ? "bg-green-100 text-green-700"
+      : l.status === "in_progress"
+      ? "bg-yellow-100 text-yellow-700"
+      : l.status === "enrolled"
+      ? "bg-blue-100 text-blue-700"
+      : "bg-red-100 text-red-700"
+  }`}
+>
+  {l.status.replace("_", " ").toUpperCase()}
+</span>
+
                 </td>
                 <td>{l.score}%</td>
                 <td>{l.attempts ?? 0}</td>
