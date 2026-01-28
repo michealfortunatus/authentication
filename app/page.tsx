@@ -30,7 +30,6 @@ type Learner = {
   score: number;
   hours_spent: number | null;
   attempts?: number;
-  // 🔹 ADD (dynamic fields from API)
 progress_percentage?: number;
 last_activity?: string;
 
@@ -182,6 +181,7 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
     { name: "Enrolled", value: enrolledCount },
     { name: "Passed", value: passedCount },
     { name: "Failed", value: failedCount },
+
   ];
 
   const handleLogout = async () => {
