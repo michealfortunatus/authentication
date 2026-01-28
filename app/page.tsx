@@ -168,7 +168,6 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
         `${l.score}%`,
         l.hours_spent ?? 0,
         l.attempts ?? 0,
-        // 🔹 ADD
   `${l.progress_percentage ?? 0}%`,
   l.last_activity ?? "-",
       ]),
