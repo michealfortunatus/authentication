@@ -240,9 +240,15 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
       {averagePassScore}%
     </p>
   </div>
+
   <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">Enrolled</p>
     <p className="text-2xl font-bold text-blue-600">{enrolledCount}</p>
+  </div>
+
+  <div className="bg-white p-4 rounded shadow">
+    <p className="text-sm text-gray-500">Not Started</p>
+    <p className="text-2xl font-bold text-blue-600">2</p>
   </div>
 
   <div className="bg-white p-4 rounded shadow">
@@ -394,9 +400,8 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
                 </td>
                 <td>{l.score}%</td>
                 <td>{l.attempts ?? 0}</td>
-                <td>{l.progress_percentage ?? 0}%</td>
                 <td>{(l.hours_spent ?? 0).toFixed(2)} hrs</td>
-
+                <td>{l.progress_percentage ?? 0}%</td>
                 <td>{l.last_activity ?? "-"}</td>
 
               </tr>
