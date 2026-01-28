@@ -238,31 +238,44 @@ export default function DashboardPage() {
 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded shadow h-80">
-          <h2 className="font-semibold mb-4">Learner Status (Pie)</h2>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={chartData} dataKey="value" nameKey="name" outerRadius={90}>
-                {chartData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+         <div className="bg-white p-6 rounded shadow h-80">
+  <h2 className="font-semibold mb-4">Learner Status (Pie)</h2>
+
+  <div className="h-[240px]"> {/* ✅ FIX */}
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={chartData}
+          dataKey="value"
+          nameKey="name"
+          outerRadius={90}
+        >
+          {chartData.map((_, i) => (
+            <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+      </PieChart>
+    </ResponsiveContainer>
+  </div>
+</div>
+
 
         <div className="bg-white p-6 rounded shadow h-80">
-          <h2 className="font-semibold mb-4">Learner Status (Bar)</h2>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+  <h2 className="font-semibold mb-4">Learner Status (Bar)</h2>
+
+  <div className="h-[240px]"> {/* ✅ FIX */}
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={chartData}>
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey="value" />
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+</div>
+
       </div>
 
       <div className="bg-white p-6 rounded shadow">
