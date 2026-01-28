@@ -55,6 +55,8 @@ type EnrolledResponse = {
     failed: number;
     in_progress: number;
     pass_mark: number;
+    average_score: number;
+    average_pass_score: number;
   };
   learners: Learner[];
   pagination: {
@@ -118,6 +120,8 @@ export default function DashboardPage() {
   const inprogressCount = enrolledData?.metrics.in_progress ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
 
+const averageScore = enrolledData?.metrics.average_score ?? 0;
+const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 
   const passedCount = enrolledData?.metrics.passed ?? 0;
   const failedCount = enrolledData?.metrics.failed ?? 0;
@@ -218,9 +222,22 @@ export default function DashboardPage() {
 <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
 <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">Pass Mark</p>
-    <p className="text-2xl font-bold">80%</p>
+    <p className="text-2xl font-bold">{enrolledData?.metrics.pass_mark ?? 80}%</p>
   </div>
 
+  <div className="bg-white p-4 rounded shadow">
+    <p className="text-sm text-gray-500">Average Score</p>
+    <p className="text-2xl font-bold text-indigo-600">
+      {averageScore}%
+    </p>
+  </div>
+
+  <div className="bg-white p-4 rounded shadow">
+    <p className="text-sm text-gray-500">Average Pass Score</p>
+    <p className="text-2xl font-bold text-green-600">
+      {averagePassScore}%
+    </p>
+  </div>
   <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">Enrolled</p>
     <p className="text-2xl font-bold text-blue-600">{enrolledCount}</p>
@@ -319,7 +336,7 @@ export default function DashboardPage() {
             <option value="all">Enrolled</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
-            <option value="in_progress">Inprogress</option>
+            <option value="in_progress">In progress</option>
 
           </select>
 
