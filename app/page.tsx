@@ -272,16 +272,22 @@ export default function DashboardPage() {
 
   <div className="h-[240px]"> {/* ✅ FIX */}
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={chartData}>
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        {chartData.map((_, i) => (
-            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-          ))}
-        <Bar dataKey="value" />
-      </BarChart>
-    </ResponsiveContainer>
+  <BarChart data={chartData}>
+    <XAxis dataKey="name" />
+    <YAxis />
+    <Tooltip />
+
+    <Bar dataKey="value">
+      {chartData.map((entry, index) => (
+        <Cell
+          key={`cell-${index}`}
+          fill={COLORS[index % COLORS.length]}
+        />
+      ))}
+    </Bar>
+  </BarChart>
+</ResponsiveContainer>
+
   </div>
 </div>
 
