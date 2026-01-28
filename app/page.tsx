@@ -83,7 +83,7 @@ export default function DashboardPage() {
     null
   );
 
-  const [days, setDays] = useState("90");
+  const [days, setDays] = useState<number>(90);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -106,15 +106,16 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    const url = `${ENROLLED_API}?page=${page}&per_page=${perPage}&status=${statusFilter}&search=${encodeURIComponent(
-      search
-    )}`;
+    const url = `${ENROLLED_API}?page=${page}&per_page=${perPage}&status=${statusFilter}&days=${days}&search=${encodeURIComponent(
+  search
+)}`;
+
 
     fetch(url)
       .then((res) => res.json())
       .then((json: EnrolledResponse) => setEnrolledData(json))
       .catch(() => toast.error("Failed to fetch enrolled data"));
-  }, [page, statusFilter, search]);
+  }, [page, statusFilter, search, days]);
 
   const inprogressCount = enrolledData?.metrics.in_progress ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
@@ -201,10 +202,11 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 
       <div className="flex gap-3">
         <select
-          className="border px-3 py-2 rounded"
           value={days}
-          onChange={(e) => setDays(e.target.value)}
-        >
+          onChange={(e) => {
+          setDays(Number(e.target.value));
+           setPage(1);
+         }}>
           <option value="90">Last 3 Months</option>
           <option value="7">Last Week</option>
           <option value="1">Last 24 Hours</option>
