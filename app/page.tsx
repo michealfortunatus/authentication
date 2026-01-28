@@ -65,7 +65,7 @@ type EnrolledResponse = {
   };
 };
 
-const COLORS = ["#dc2626", "#2563eb",  "#16a34a", "#f59e0b"];
+const COLORS = ["#f59e0b", "#2563eb",  "#16a34a","#dc2626", ];
 
 const REGISTERED_API =
   "https://renaissance.genzaar.app/wp-json/lp-dashboard/v2/registered";
@@ -276,6 +276,9 @@ export default function DashboardPage() {
         <XAxis dataKey="name" />
         <YAxis />
         <Tooltip />
+        {chartData.map((_, i) => (
+            <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          ))}
         <Bar dataKey="value" />
       </BarChart>
     </ResponsiveContainer>
