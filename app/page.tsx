@@ -53,6 +53,7 @@ type EnrolledResponse = {
     total_students: number;
     passed: number;
     failed: number;
+    inprogress: number;
     pass_mark: number;
   };
   learners: Learner[];
@@ -114,7 +115,7 @@ export default function DashboardPage() {
       .catch(() => toast.error("Failed to fetch enrolled data"));
   }, [page, statusFilter, search]);
 
-  const inprogressCount = inprogressData?.metrics?.inprogress ?? 0;
+  const inprogressCount = enrolledData?.metrics.inprogress ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
 
 
@@ -173,7 +174,7 @@ export default function DashboardPage() {
   };
 
   const chartData = [
-    { name: "Registered", value: registeredCount },
+    { name: "Inprogress", value: inprogressCount },
     { name: "Enrolled", value: enrolledCount },
     { name: "Passed", value: passedCount },
     { name: "Failed", value: failedCount },
@@ -306,6 +307,8 @@ export default function DashboardPage() {
             <option value="all">Enrolled</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
+            <option value="inprogress">Inprogress</option>
+
           </select>
 
           <div className="flex gap-2">
