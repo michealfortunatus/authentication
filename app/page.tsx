@@ -114,7 +114,7 @@ export default function DashboardPage() {
       .catch(() => toast.error("Failed to fetch enrolled data"));
   }, [page, statusFilter, search]);
 
-  const registeredCount = registeredData?.metrics.registered ?? 0;
+  const registeredCount = registeredData?.metrics?.registered ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
 
 
@@ -215,10 +215,10 @@ export default function DashboardPage() {
 
       {/* Summary */}
 <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
-  {/* <div className="bg-white p-4 rounded shadow">
+   <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">Registered</p>
     <p className="text-2xl font-bold">{registeredCount}</p>
-  </div> */}
+  </div>
 
   <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">Enrolled</p>
