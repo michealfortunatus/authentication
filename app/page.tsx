@@ -364,6 +364,7 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
               <th>Status</th>
               <th>Score</th>
               <th>Attempts</th>
+              <th>Hours Spent</th>
               <th>Completion %</th>
               <th>Last Activity</th>
             </tr>
@@ -392,6 +393,8 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
                 <td>{l.score}%</td>
                 <td>{l.attempts ?? 0}</td>
                 <td>{l.progress_percentage ?? 0}%</td>
+                <td>{(l.hours_spent ?? 0).toFixed(2)} hrs</td>
+
                 <td>{l.last_activity ?? "-"}</td>
 
               </tr>
