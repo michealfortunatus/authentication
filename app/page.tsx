@@ -319,7 +319,7 @@ export default function DashboardPage() {
             <option value="all">Enrolled</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
-            <option value="inprogress">Inprogress</option>
+            <option value="in_progress">Inprogress</option>
 
           </select>
 
