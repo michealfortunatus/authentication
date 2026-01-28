@@ -223,12 +223,12 @@ export default function DashboardPage() {
 
   <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">Enrolled</p>
-    <p className="text-2xl font-bold">{enrolledCount}</p>
+    <p className="text-2xl font-bold text-blue-600">{enrolledCount}</p>
   </div>
 
   <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">In Progress</p>
-    <p className="text-2xl font-bold">{inprogressCount}</p>
+    <p className="text-2xl font-bold text-yellow-600">{inprogressCount}</p>
   </div>
 
   <div className="bg-white p-4 rounded shadow">
