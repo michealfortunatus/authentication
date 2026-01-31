@@ -139,9 +139,8 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
         score: l.score,
         hours_spent: l.hours_spent ?? 0,
         attempts: l.attempts ?? 0,
-        // 🔹 ADD
-    progress_percentage: l.progress_percentage ?? 0,
-    last_activity: l.last_activity ?? "",
+        progress_percentage: l.progress_percentage ?? 0,
+        last_activity: l.last_activity ?? "",
       }))
     );
 
@@ -226,19 +225,19 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
     <p className="text-2xl font-bold">{enrolledData?.metrics.pass_mark ?? 80}%</p>
   </div>
 
-  <div className="bg-white p-4 rounded shadow">
+  {/* <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">Average Score</p>
     <p className="text-2xl font-bold text-indigo-600">
       {averageScore}%
     </p>
-  </div>
+  </div> */}
 
-  <div className="bg-white p-4 rounded shadow">
+  {/* <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">Average Pass Score</p>
     <p className="text-2xl font-bold text-green-600">
       {averagePassScore}%
     </p>
-  </div>
+  </div> */}
 
   <div className="bg-white p-4 rounded shadow">
     <p className="text-sm text-gray-500">Enrolled</p>
