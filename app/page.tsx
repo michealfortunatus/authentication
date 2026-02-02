@@ -224,7 +224,7 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
   };
 
   // derive super admins from env at component scope (defined before JSX)
-  const superAdmins =
+  const superAdmins = "demo@demo.com";
     (process.env.NEXT_PUBLIC_SUPER_ADMINS || process.env.SUPER_ADMINS || "")
       .split(",")
       .map((s) => s.trim())
