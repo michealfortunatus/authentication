@@ -23,6 +23,16 @@ import Papa from "papaparse";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+type LearnerCourse = {
+  course_id: string;
+  course_title: string;
+  status: string;
+  graduation: string;
+  start_time: string | null;
+  end_time: string | null;
+};
+
+
 type Learner = {
   id: string;
   name: string;
@@ -33,6 +43,7 @@ type Learner = {
   attempts?: number;
 progress_percentage?: number;
 last_activity?: string;
+courses?: LearnerCourse[];
 
 };
 
@@ -122,6 +133,8 @@ const [addingAdmin, setAddingAdmin] = useState(false);
       .catch(() => toast.error("Failed to fetch enrolled data"));
   }, [page, statusFilter, search, days]);
 
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("all");
+
   const inprogressCount = enrolledData?.metrics.in_progress ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
 
@@ -130,8 +143,16 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 
   const passedCount = enrolledData?.metrics.passed ?? 0;
   const failedCount = enrolledData?.metrics.failed ?? 0;
+  const learners = useMemo(() => {
+  let list = enrolledData?.learners || [];
+  if (selectedCourseId !== "all") {
+    list = list.filter(
+      (l) => l.courses?.some((c) => c.course_id === selectedCourseId)
+    );
+  }
+  return list;
+}, [enrolledData, selectedCourseId]);
 
-  const learners = useMemo(() => enrolledData?.learners || [], [enrolledData]);
 
   const totalPages = enrolledData?.pagination.total_pages ?? 1;
 
@@ -146,6 +167,7 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
         attempts: l.attempts ?? 0,
         progress_percentage: l.progress_percentage ?? 0,
         last_activity: l.last_activity ?? "",
+        courses: l.courses?.map((c) => c.course_title).join(", ") ?? ""
       }))
     );
 
@@ -174,6 +196,7 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
         l.attempts ?? 0,
   `${l.progress_percentage ?? 0}%`,
   l.last_activity ?? "-",
+   l.courses?.map((c) => c.course_title).join(", ") ?? "-"
       ]),
     });
 
@@ -348,19 +371,46 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
                 className="border px-3 py-2 rounded w-64" />
             </div>
 
-            <select
-              className="border px-3 py-2 rounded"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="all">Enrolled</option>
-              <option value="passed">Passed</option>
-              <option value="failed">Failed</option>
-              <option value="in_progress">In progress</option>
-            </select>
+            {/* STATUS FILTER */}
+<select
+  className="border px-3 py-2 rounded"
+  value={statusFilter}
+  onChange={(e) => {
+    setStatusFilter(e.target.value);
+    setPage(1);
+  }}
+>
+  <option value="all">Enrolled</option>
+  <option value="passed">Passed</option>
+  <option value="failed">Failed</option>
+  <option value="in_progress">In progress</option>
+</select>
+
+{/* COURSE FILTER */}
+<select
+  className="border px-3 py-2 rounded ml-2"
+  value={selectedCourseId}
+  onChange={(e) => {
+    setSelectedCourseId(e.target.value);
+    setPage(1);
+  }}
+>
+  <option value="all">All Courses</option>
+  {(() => {
+    const coursesMap: Record<string, string> = {};
+    learners.forEach((l) => {
+      l.courses?.forEach((c) => {
+        if (!coursesMap[c.course_id]) coursesMap[c.course_id] = c.course_title;
+      });
+    });
+    return Object.entries(coursesMap).map(([id, title]) => (
+      <option key={id} value={id}>
+        {title}
+      </option>
+    ));
+  })()}
+</select>
+
 
             <div className="flex gap-2">
               <button
@@ -389,6 +439,7 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
                 <th>Hours Spent</th>
                 <th>Completion %</th>
                 <th>Last Activity</th>
+                <th>Courses</th>
               </tr>
             </thead>
             <tbody>
@@ -414,6 +465,23 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
                   <td>{(l.hours_spent ?? 0).toFixed(2)} hrs</td>
                   <td>{l.progress_percentage ?? 0}%</td>
                   <td>{l.last_activity ?? "-"}</td>
+                  <td>
+  {l.courses && l.courses.length > 0 ? (
+    <ul className="space-y-1">
+      {l.courses.map((c) => (
+        <li key={c.course_id} className="text-xs">
+          <span className="font-medium">{c.course_title}</span>
+          <span className="ml-1 text-gray-500">
+            ({c.graduation || c.status})
+          </span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <span className="text-gray-400 text-xs">—</span>
+  )}
+</td>
+
                 </tr>
               ))}
             </tbody>
