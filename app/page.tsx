@@ -93,6 +93,8 @@ const [addingAdmin, setAddingAdmin] = useState(false);
 
   const [user, setUser] = useState<{ email: string; role?: string } | null>(null);
 
+
+
   const [registeredData, setRegisteredData] =
     useState<RegisteredResponse | null>(null);
   const [enrolledData, setEnrolledData] = useState<EnrolledResponse | null>(
@@ -153,7 +155,11 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
   return list;
 }, [enrolledData, selectedCourseId]);
 
-
+const notStartedCount = useMemo(() => {
+  return learners.filter(l =>
+    !l.courses || l.courses.every(c => c.status === "not_started" || !c.status)
+  ).length;
+}, [learners]);
   const totalPages = enrolledData?.pagination.total_pages ?? 1;
 
   const downloadCSV = () => {
@@ -255,6 +261,9 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 
   return (
     <>
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
+      <h1 className="text-2xl font-bold">Renaissance Analytics Dashboard</h1>
+      <p className="text-sm text-gray-500">Welcome, {user?.email}</p>
       {user && superAdmins.includes(user.email) && <AddAdminSection />}
 
       <div className="flex gap-3">
@@ -292,9 +301,10 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
           </div>
 
           <div className="bg-white p-4 rounded shadow">
-            <p className="text-sm text-gray-500">Not Started</p>
-            <p className="text-2xl font-bold text-blue-600">1</p>
+               <p className="text-sm text-gray-500">Not Started</p>
+               <p className="text-2xl font-bold text-blue-600">{notStartedCount}</p>
           </div>
+
 
           <div className="bg-white p-4 rounded shadow">
             <p className="text-sm text-gray-500">In Progress</p>
@@ -509,7 +519,9 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
             </button>
           </div>
         </div>
+
       </>
+    </div>
     </>
   );
 }
