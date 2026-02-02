@@ -59,7 +59,8 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorised." }, { status: 401 });
   }
 
-  const user = await User.findById(userId).select("-password");
+ const user = await User.findById(userId).select("email role");
+
   if (!user) {
     return NextResponse.json({ message: "User not found." }, { status: 404 });
   }

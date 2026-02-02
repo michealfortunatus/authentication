@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IUser extends Document {
   email: string;
   password: string;
+  role: "user" | "admin";
 }
 
 const userSchema = new Schema<IUser>(
@@ -26,6 +27,14 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
+    },
+
+    // ✅ added
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      index: true,
     },
   },
   { timestamps: true }
