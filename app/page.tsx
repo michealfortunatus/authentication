@@ -431,7 +431,7 @@ const notStartedCount = useMemo(() => {
                   <YAxis />
                   <Tooltip />
 
-                  <Bar dataKey="value">
+                  <Bar dataKey="value" width="25%">
                     {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
@@ -454,9 +454,9 @@ const notStartedCount = useMemo(() => {
         <Tooltip />
         <Legend/>
 
-        <Bar dataKey="enrolled" fill="#2563eb" />
-        <Bar dataKey="in_progress" fill="#f59e0b" />
-        <Bar dataKey="passed" fill="#16a34a" />
+        <Bar dataKey="enrolled" fill="#2563eb" width="75%" />
+        <Bar dataKey="in_progress" fill="#f59e0b" width="75%" />
+        <Bar dataKey="passed" fill="#16a34a" width="75%" />
       </BarChart>
     </ResponsiveContainer>
   </div>
