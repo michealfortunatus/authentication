@@ -572,7 +572,7 @@ const notStartedCount = useMemo(() => {
                 <th>Hours Spent</th>
                 <th>Completion %</th>
                 <th>Last Activity</th>
-                <th>Courses</th>
+                <th>Course</th>
                 <th>Department</th>
               </tr>
             </thead>
@@ -605,9 +605,9 @@ const notStartedCount = useMemo(() => {
       {l.courses.map((c) => (
         <li key={c.course_id} className="text-xs">
           <span className="font-medium">{c.course_title}</span>
-          <span className="ml-1 text-gray-500">
+          {/* <span className="ml-1 text-gray-500">
             ({c.graduation || c.status})
-          </span>
+          </span> */}
         </li>
       ))}
     </ul>
