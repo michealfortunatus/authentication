@@ -162,6 +162,11 @@ const notStartedCount = useMemo(() => {
 }, [learners]);
   const totalPages = enrolledData?.pagination.total_pages ?? 1;
 
+  const combinedInProgressCount = useMemo(() => {
+  return inprogressCount + notStartedCount + failedCount;
+}, [inprogressCount, notStartedCount, failedCount]);
+
+
   const downloadCSV = () => {
     const csv = Papa.unparse(
       learners.map((l) => ({
@@ -300,15 +305,23 @@ const notStartedCount = useMemo(() => {
             <p className="text-2xl font-bold text-blue-600">{enrolledCount}</p>
           </div>
 
-          <div className="bg-white p-4 rounded shadow">
+          {/* <div className="bg-white p-4 rounded shadow">
                <p className="text-sm text-gray-500">Not Started</p>
                <p className="text-2xl font-bold text-blue-600">{notStartedCount}</p>
-          </div>
+          </div> */}
 
 
           <div className="bg-white p-4 rounded shadow">
-            <p className="text-sm text-gray-500">In Progress</p>
+            <p className="text-2xl font-bold text-yellow-600">
+  {combinedInProgressCount}
+</p>
+
+            {/* <p className="text-sm text-gray-500">In Progress</p>
             <p className="text-2xl font-bold text-yellow-600">{inprogressCount}</p>
+            <p className="text-sm text-gray-500">Not Started</p>
+               <p className="text-2xl font-bold text-blue-600">{notStartedCount}</p>
+                <p className="text-sm text-gray-500">Failed</p>
+            <p className="text-2xl font-bold text-red-600">{failedCount}</p> */}
           </div>
 
           <div className="bg-white p-4 rounded shadow">
@@ -316,10 +329,9 @@ const notStartedCount = useMemo(() => {
             <p className="text-2xl font-bold text-green-600">{passedCount}</p>
           </div>
 
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-sm text-gray-500">Failed</p>
-            <p className="text-2xl font-bold text-red-600">{failedCount}</p>
-          </div>
+          {/* <div className="bg-white p-4 rounded shadow">
+
+          </div> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
