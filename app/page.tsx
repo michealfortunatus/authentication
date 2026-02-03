@@ -357,7 +357,7 @@ const notStartedCount = useMemo(() => {
 
       {/* Summary */}
       <>
-        <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 md:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded shadow">
             <p className="text-sm text-gray-500">Pass Mark</p>
             <p className="text-2xl font-bold">{enrolledData?.metrics.pass_mark ?? 80}%</p>
@@ -398,7 +398,7 @@ const notStartedCount = useMemo(() => {
           </div> */}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-white p-6 rounded shadow h-80">
             <h2 className="font-semibold mb-4">Learner Status (Pie)</h2>
 
