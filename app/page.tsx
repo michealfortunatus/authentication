@@ -23,6 +23,11 @@ import Papa from "papaparse";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+type Department = {
+  id: string;
+  name: string;
+};
+
 type LearnerCourse = {
   course_id: string;
   course_title: string;
@@ -44,6 +49,7 @@ type Learner = {
 progress_percentage?: number;
 last_activity?: string;
 courses?: LearnerCourse[];
+departments?: Department[];
 
 };
 
@@ -145,15 +151,25 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 
   const passedCount = enrolledData?.metrics.passed ?? 0;
   const failedCount = enrolledData?.metrics.failed ?? 0;
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("all");
   const learners = useMemo(() => {
   let list = enrolledData?.learners || [];
+
   if (selectedCourseId !== "all") {
-    list = list.filter(
-      (l) => l.courses?.some((c) => c.course_id === selectedCourseId)
+    list = list.filter((l) =>
+      l.courses?.some((c) => c.course_id === selectedCourseId)
     );
   }
+
+  if (selectedDepartmentId !== "all") {
+    list = list.filter((l) =>
+      l.departments?.some((d) => d.id === selectedDepartmentId)
+    );
+  }
+
   return list;
-}, [enrolledData, selectedCourseId]);
+}, [enrolledData, selectedCourseId, selectedDepartmentId]);
+
 
 const notStartedCount = useMemo(() => {
   return learners.filter(l =>
@@ -165,6 +181,7 @@ const notStartedCount = useMemo(() => {
   const combinedInProgressCount = useMemo(() => {
   return inprogressCount + notStartedCount + failedCount;
 }, [inprogressCount, notStartedCount, failedCount]);
+
 
 
   const downloadCSV = () => {
@@ -450,6 +467,32 @@ const notStartedCount = useMemo(() => {
   })()}
 </select>
 
+{/* DEPARTMENT FILTER */}
+<select
+  className="border px-3 py-2 rounded ml-2"
+  value={selectedDepartmentId}
+  onChange={(e) => {
+    setSelectedDepartmentId(e.target.value);
+    setPage(1);
+  }}
+>
+  <option value="all">All Departments</option>
+  {(() => {
+    const deptMap: Record<string, string> = {};
+    enrolledData?.learners.forEach((l) => {
+      l.departments?.forEach((d) => {
+        if (!deptMap[d.id]) deptMap[d.id] = d.name;
+      });
+    });
+
+    return Object.entries(deptMap).map(([id, name]) => (
+      <option key={id} value={id}>
+        {name}
+      </option>
+    ));
+  })()}
+</select>
+
 
             <div className="flex gap-2">
               <button
@@ -479,6 +522,7 @@ const notStartedCount = useMemo(() => {
                 <th>Completion %</th>
                 <th>Last Activity</th>
                 <th>Courses</th>
+                <th>Department</th>
               </tr>
             </thead>
             <tbody>
@@ -520,6 +564,38 @@ const notStartedCount = useMemo(() => {
     <span className="text-gray-400 text-xs">—</span>
   )}
 </td>
+
+<td>
+  {l.courses && l.courses.length > 0 ? (
+    <ul className="space-y-1">
+      {l.courses.map((c) => (
+        <li key={c.course_id} className="text-xs">
+          <span className="font-medium">{c.course_title}</span>
+          <span className="ml-1 text-gray-500">
+            ({c.graduation || c.status})
+          </span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <span className="text-gray-400 text-xs">—</span>
+  )}
+</td>
+
+<td>
+  {l.departments && l.departments.length > 0 ? (
+    <ul className="space-y-1">
+      {l.departments.map((d) => (
+        <li key={d.id} className="text-xs font-medium">
+          {d.name}
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <span className="text-gray-400 text-xs">—</span>
+  )}
+</td>
+
 
                 </tr>
               ))}
