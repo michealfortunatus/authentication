@@ -22,7 +22,8 @@ import {
 import { Download, FileText, LogOut, Search } from "lucide-react";
 import Papa from "papaparse";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
+
 
 type Department = {
   id: string;
@@ -236,28 +237,42 @@ const notStartedCount = useMemo(() => {
     a.click();
   };
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Learners Report", 14, 16);
+ const downloadPDF = () => {
+  const doc = new jsPDF();
 
-    (doc as any).autoTable({
-      startY: 24,
-      head: [["Name", "Email", "Status", "Score", "Hours Spent", "Attempts","Completion %", "Last Activity"]],
-      body: learners.map((l) => [
-        l.name,
-        l.email,
-        l.status.toUpperCase(),
-        `${l.score}%`,
-        l.hours_spent ?? 0,
-        l.attempts ?? 0,
-  `${l.progress_percentage ?? 0}%`,
-  l.last_activity ?? "-",
-   l.courses?.map((c) => c.course_title).join(", ") ?? "-"
-      ]),
-    });
+  doc.text("Learners Report", 14, 16);
 
-    doc.save("learners-report.pdf");
-  };
+  autoTable(doc, {
+    startY: 24,
+    head: [[
+      "Name",
+      "Email",
+      "Status",
+      "Score",
+      "Hours Spent",
+      "Attempts",
+      "Completion %",
+      "Last Activity",
+      "Courses",
+      "Departments",
+    ]],
+    body: learners.map((l) => [
+      l.name,
+      l.email,
+      l.status.replace("_", " ").toUpperCase(),
+      `${l.score}%`,
+      l.hours_spent ?? 0,
+      l.attempts ?? 0,
+      `${l.progress_percentage ?? 0}%`,
+      l.last_activity ?? "-",
+      l.courses?.map(c => c.course_title).join(", ") ?? "-",
+      l.departments?.map(d => d.name).join(", ") ?? "-",
+    ]),
+  });
+
+  doc.save("learners-report.pdf");
+};
+
 
   // const chartData = [
   //   { name: "Inprogress", value: inprogressCount },
