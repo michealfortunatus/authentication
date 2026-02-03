@@ -16,6 +16,7 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  Legend
 } from "recharts";
 
 import { Download, FileText, LogOut, Search } from "lucide-react";
@@ -171,22 +172,30 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 }, [enrolledData, selectedCourseId, selectedDepartmentId]);
 
 const departmentChartData = useMemo(() => {
-  const map: Record<string, number> = {};
+  const map: Record<string, { enrolled: number; in_progress: number; passed: number }> = {};
 
   learners.forEach((learner) => {
     learner.departments?.forEach((dept) => {
       if (!map[dept.name]) {
-        map[dept.name] = 0;
+        map[dept.name] = { enrolled: 0, in_progress: 0, passed: 0 };
       }
-      map[dept.name] += 1;
+
+      map[dept.name].enrolled += 1;
+
+      if (learner.status === "passed") {
+        map[dept.name].passed += 1;
+      } else if (learner.status === "in_progress") {
+        map[dept.name].in_progress += 1;
+      }
     });
   });
 
-  return Object.entries(map).map(([name, value]) => ({
+  return Object.entries(map).map(([name, counts]) => ({
     name,
-    value,
+    ...counts,
   }));
 }, [learners]);
+
 
 
 
@@ -257,6 +266,8 @@ const notStartedCount = useMemo(() => {
   //   { name: "Failed", value: failedCount },
 
   // ];
+
+
 
   const chartData = useMemo(() => [
   {
@@ -437,22 +448,20 @@ const notStartedCount = useMemo(() => {
 
   <div className="h-[240px]">
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={departmentChartData}>
+      <BarChart data={departmentChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
         <XAxis dataKey="name" />
         <YAxis allowDecimals={false} />
         <Tooltip />
-        <Bar dataKey="value">
-          {departmentChartData.map((_, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={COLORS[index % COLORS.length]}
-            />
-          ))}
-        </Bar>
+        <Legend/>
+
+        <Bar dataKey="enrolled" fill="#2563eb" />
+        <Bar dataKey="in_progress" fill="#f59e0b" />
+        <Bar dataKey="passed" fill="#16a34a" />
       </BarChart>
     </ResponsiveContainer>
   </div>
 </div>
+
 
         </div>
 
