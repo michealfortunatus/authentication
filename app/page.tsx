@@ -565,7 +565,7 @@ const notStartedCount = useMemo(() => {
   )}
 </td>
 
-<td>
+{/* <td>
   {l.courses && l.courses.length > 0 ? (
     <ul className="space-y-1">
       {l.courses.map((c) => (
@@ -580,7 +580,7 @@ const notStartedCount = useMemo(() => {
   ) : (
     <span className="text-gray-400 text-xs">—</span>
   )}
-</td>
+</td> */}
 
 <td>
   {l.departments && l.departments.length > 0 ? (
