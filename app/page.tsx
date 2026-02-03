@@ -214,13 +214,29 @@ const notStartedCount = useMemo(() => {
     doc.save("learners-report.pdf");
   };
 
-  const chartData = [
-    { name: "Inprogress", value: inprogressCount },
-    { name: "Enrolled", value: enrolledCount },
-    { name: "Passed", value: passedCount },
-    { name: "Failed", value: failedCount },
+  // const chartData = [
+  //   { name: "Inprogress", value: inprogressCount },
+  //   { name: "Enrolled", value: enrolledCount },
+  //   { name: "Passed", value: passedCount },
+  //   { name: "Failed", value: failedCount },
 
-  ];
+  // ];
+
+  const chartData = useMemo(() => [
+  {
+    name: "In Progress",
+    value: combinedInProgressCount, // ✅ merged value
+  },
+  {
+    name: "Passed",
+    value: passedCount,
+  },
+  {
+    name: "Enrolled",
+    value: enrolledCount,
+  },
+], [combinedInProgressCount, passedCount, enrolledCount]);
+
 
   const handleLogout = async () => {
     try {
