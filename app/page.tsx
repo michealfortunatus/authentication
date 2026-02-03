@@ -312,6 +312,7 @@ const notStartedCount = useMemo(() => {
 
 
           <div className="bg-white p-4 rounded shadow">
+               <p className="text-sm text-gray-500">In progress</p>
             <p className="text-2xl font-bold text-yellow-600">
   {combinedInProgressCount}
 </p>
