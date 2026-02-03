@@ -170,6 +170,25 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
   return list;
 }, [enrolledData, selectedCourseId, selectedDepartmentId]);
 
+const departmentChartData = useMemo(() => {
+  const map: Record<string, number> = {};
+
+  learners.forEach((learner) => {
+    learner.departments?.forEach((dept) => {
+      if (!map[dept.name]) {
+        map[dept.name] = 0;
+      }
+      map[dept.name] += 1;
+    });
+  });
+
+  return Object.entries(map).map(([name, value]) => ({
+    name,
+    value,
+  }));
+}, [learners]);
+
+
 
 const notStartedCount = useMemo(() => {
   return learners.filter(l =>
@@ -412,6 +431,29 @@ const notStartedCount = useMemo(() => {
               </ResponsiveContainer>
             </div>
           </div>
+
+          <div className="bg-white p-6 rounded shadow h-80">
+  <h2 className="font-semibold mb-4">Learners by Department</h2>
+
+  <div className="h-[240px]">
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={departmentChartData}>
+        <XAxis dataKey="name" />
+        <YAxis allowDecimals={false} />
+        <Tooltip />
+        <Bar dataKey="value">
+          {departmentChartData.map((_, index) => (
+            <Cell
+              key={`cell-${index}`}
+              fill={COLORS[index % COLORS.length]}
+            />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+</div>
+
         </div>
 
         <div className="bg-white p-6 rounded shadow">
