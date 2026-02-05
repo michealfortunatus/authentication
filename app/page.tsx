@@ -48,10 +48,11 @@ type Learner = {
   score: number;
   hours_spent: number | null;
   attempts?: number;
-  progress_percentage?: number;
-  last_activity?: string;
-  courses?: LearnerCourse[];
-  departments?: Department[];
+progress_percentage?: number;
+last_activity?: string;
+courses?: LearnerCourse[];
+departments?: Department[];
+
 };
 
 type RegisteredResponse = {
@@ -70,7 +71,7 @@ type EnrolledResponse = {
   metrics: {
     total_students: number;
     passed: number;
-    failed?: number;
+    failed: number;
     in_progress: number;
     pass_mark: number;
     average_score: number;
@@ -100,9 +101,13 @@ const [addingAdmin, setAddingAdmin] = useState(false);
 
   const [user, setUser] = useState<{ email: string; role?: string } | null>(null);
 
+
+
   const [registeredData, setRegisteredData] =
     useState<RegisteredResponse | null>(null);
-  const [enrolledData, setEnrolledData] = useState<EnrolledResponse | null>(null);
+  const [enrolledData, setEnrolledData] = useState<EnrolledResponse | null>(
+    null
+  );
 
   const [days, setDays] = useState<number>(90);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -131,6 +136,7 @@ const [addingAdmin, setAddingAdmin] = useState(false);
   search
 )}`;
 
+
     fetch(url)
       .then((res) => res.json())
       .then((json: EnrolledResponse) => setEnrolledData(json))
@@ -142,71 +148,70 @@ const [addingAdmin, setAddingAdmin] = useState(false);
   const inprogressCount = enrolledData?.metrics.in_progress ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
 
-  const averageScore = enrolledData?.metrics.average_score ?? 0;
-  const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
+const averageScore = enrolledData?.metrics.average_score ?? 0;
+const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 
   const passedCount = enrolledData?.metrics.passed ?? 0;
-  const failedCount = enrolledData?.metrics.failed ?? (enrolledCount - passedCount - inprogressCount);
+  const failedCount = enrolledData?.metrics.failed ?? 0;
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("all");
-
   const learners = useMemo(() => {
-    let list = (enrolledData?.learners || []).map(l => ({
-      ...l,
-      courses: l.courses || [],
-      departments: l.departments || [],
-    }));
+  let list = enrolledData?.learners || [];
 
-    if (selectedCourseId !== "all") {
-      list = list.filter((l) =>
-        l.courses.some((c) => c.course_id === selectedCourseId)
-      );
-    }
+  if (selectedCourseId !== "all") {
+    list = list.filter((l) =>
+      l.courses?.some((c) => c.course_id === selectedCourseId)
+    );
+  }
 
-    if (selectedDepartmentId !== "all") {
-      list = list.filter((l) =>
-        l.departments.some((d) => d.id === selectedDepartmentId)
-      );
-    }
+  if (selectedDepartmentId !== "all") {
+    list = list.filter((l) =>
+      l.departments?.some((d) => d.id === selectedDepartmentId)
+    );
+  }
 
-    return list;
-  }, [enrolledData, selectedCourseId, selectedDepartmentId]);
+  return list;
+}, [enrolledData, selectedCourseId, selectedDepartmentId]);
 
-  const departmentChartData = useMemo(() => {
-    const map: Record<string, { enrolled: number; in_progress: number; passed: number }> = {};
+const departmentChartData = useMemo(() => {
+  const map: Record<string, { enrolled: number; in_progress: number; passed: number }> = {};
 
-    learners.forEach((learner) => {
-      learner.departments?.forEach((dept) => {
-        if (!map[dept.name]) {
-          map[dept.name] = { enrolled: 0, in_progress: 0, passed: 0 };
-        }
+  learners.forEach((learner) => {
+    learner.departments?.forEach((dept) => {
+      if (!map[dept.name]) {
+        map[dept.name] = { enrolled: 0, in_progress: 0, passed: 0 };
+      }
 
-        map[dept.name].enrolled += 1;
+      map[dept.name].enrolled += 1;
 
-        if (learner.status === "passed") {
-          map[dept.name].passed += 1;
-        } else if (learner.status === "in_progress") {
-          map[dept.name].in_progress += 1;
-        }
-      });
+      if (learner.status === "passed") {
+        map[dept.name].passed += 1;
+      } else if (learner.status === "in_progress") {
+        map[dept.name].in_progress += 1;
+      }
     });
+  });
 
-    return Object.entries(map).map(([name, counts]) => ({
-      name,
-      ...counts,
-    }));
-  }, [learners]);
+  return Object.entries(map).map(([name, counts]) => ({
+    name,
+    ...counts,
+  }));
+}, [learners]);
 
-  const notStartedCount = useMemo(() => {
-    return learners.filter(l =>
-      !l.courses || l.courses.every(c => c.status === "not_started" || !c.status)
-    ).length;
-  }, [learners]);
 
+
+
+const notStartedCount = useMemo(() => {
+  return learners.filter(l =>
+    !l.courses || l.courses.every(c => c.status === "not_started" || !c.status)
+  ).length;
+}, [learners]);
   const totalPages = enrolledData?.pagination.total_pages ?? 1;
 
   const combinedInProgressCount = useMemo(() => {
-    return inprogressCount + notStartedCount + failedCount;
-  }, [inprogressCount, notStartedCount, failedCount]);
+  return inprogressCount + notStartedCount + failedCount;
+}, [inprogressCount, notStartedCount, failedCount]);
+
+
 
   const downloadCSV = () => {
     const csv = Papa.unparse(
@@ -232,56 +237,68 @@ const [addingAdmin, setAddingAdmin] = useState(false);
     a.click();
   };
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
+ const downloadPDF = () => {
+  const doc = new jsPDF();
 
-    doc.text("Learners Report", 14, 16);
+  doc.text("Learners Report", 14, 16);
 
-    autoTable(doc, {
-      startY: 24,
-      head: [[
-        "Name",
-        "Email",
-        "Status",
-        "Score",
-        "Hours Spent",
-        "Attempts",
-        "Completion %",
-        "Last Activity",
-        "Courses",
-        "Departments",
-      ]],
-      body: learners.map((l) => [
-        l.name,
-        l.email,
-        l.status.replace("_", " ").toUpperCase(),
-        `${l.score}%`,
-        l.hours_spent ?? 0,
-        l.attempts ?? 0,
-        `${l.progress_percentage ?? 0}%`,
-        l.last_activity ?? "-",
-        l.courses?.map(c => c.course_title).join(", ") ?? "-",
-        l.departments?.map(d => d.name).join(", ") ?? "-",
-      ]),
-    });
+  autoTable(doc, {
+    startY: 24,
+    head: [[
+      "Name",
+      "Email",
+      "Status",
+      "Score",
+      "Hours Spent",
+      "Attempts",
+      "Completion %",
+      "Last Activity",
+      "Courses",
+      "Departments",
+    ]],
+    body: learners.map((l) => [
+      l.name,
+      l.email,
+      l.status.replace("_", " ").toUpperCase(),
+      `${l.score}%`,
+      l.hours_spent ?? 0,
+      l.attempts ?? 0,
+      `${l.progress_percentage ?? 0}%`,
+      l.last_activity ?? "-",
+      l.courses?.map(c => c.course_title).join(", ") ?? "-",
+      l.departments?.map(d => d.name).join(", ") ?? "-",
+    ]),
+  });
 
-    doc.save("learners-report.pdf");
-  };
+  doc.save("learners-report.pdf");
+};
+
+
+  // const chartData = [
+  //   { name: "Inprogress", value: inprogressCount },
+  //   { name: "Enrolled", value: enrolledCount },
+  //   { name: "Passed", value: passedCount },
+  //   { name: "Failed", value: failedCount },
+
+  // ];
+
+
 
   const chartData = useMemo(() => [
-    {
-      name: "In Progress",
-      value: combinedInProgressCount, // ✅ merged value
-    },
-    {
-      name: "Passed",
-      value: passedCount,
-    },
-    {
-      name: "Enrolled",
-      value: enrolledCount,
-    },
-  ], [combinedInProgressCount, passedCount, enrolledCount]);
+  {
+    name: "In Progress",
+    value: combinedInProgressCount, // ✅ merged value
+  },
+  {
+    name: "Passed",
+    value: passedCount,
+  },
+  {
+    name: "Enrolled",
+    value: enrolledCount,
+  },
+], [combinedInProgressCount, passedCount, enrolledCount]);
+
 
   const handleLogout = async () => {
     try {
@@ -292,6 +309,7 @@ const [addingAdmin, setAddingAdmin] = useState(false);
       toast.error("Failed to log out.");
     }
   };
+
 
   const handleAddAdmin = async () => {
     if (!newAdminEmail) {
@@ -369,6 +387,7 @@ const [addingAdmin, setAddingAdmin] = useState(false);
                <p className="text-sm text-gray-500">Not Started</p>
                <p className="text-2xl font-bold text-blue-600">{notStartedCount}</p>
           </div> */}
+
 
           <div className="bg-white p-4 rounded shadow">
                <p className="text-sm text-gray-500">In progress</p>
@@ -462,6 +481,7 @@ const [addingAdmin, setAddingAdmin] = useState(false);
   </div>
 </div>
 
+
         </div>
 
         <div className="bg-white p-6 rounded shadow">
@@ -530,7 +550,7 @@ const [addingAdmin, setAddingAdmin] = useState(false);
   {(() => {
     const deptMap: Record<string, string> = {};
     enrolledData?.learners.forEach((l) => {
-      (l.departments || []).forEach((d) => {
+      l.departments?.forEach((d) => {
         if (!deptMap[d.id]) deptMap[d.id] = d.name;
       });
     });
@@ -542,6 +562,7 @@ const [addingAdmin, setAddingAdmin] = useState(false);
     ));
   })()}
 </select>
+
 
             <div className="flex gap-2">
               <button
@@ -642,6 +663,23 @@ const [addingAdmin, setAddingAdmin] = useState(false);
   )}
 </td>
 
+{/* <td>
+  {l.courses && l.courses.length > 0 ? (
+    <ul className="space-y-1">
+      {l.courses.map((c) => (
+        <li key={c.course_id} className="text-xs">
+          <span className="font-medium">{c.course_title}</span>
+          <span className="ml-1 text-gray-500">
+            ({c.graduation || c.status})
+          </span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <span className="text-gray-400 text-xs">—</span>
+  )}
+</td> */}
+
 <td>
   {l.departments && l.departments.length > 0 ? (
     <ul className="space-y-1">
@@ -655,6 +693,7 @@ const [addingAdmin, setAddingAdmin] = useState(false);
     <span className="text-gray-400 text-xs">—</span>
   )}
 </td>
+
 
                 </tr>
               ))}
