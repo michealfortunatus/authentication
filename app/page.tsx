@@ -579,125 +579,107 @@ const notStartedCount = useMemo(() => {
             </div>
           </div>
 
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="py-2">Name</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Score</th>
-                <th>Attempts</th>
-                <th>Hours Spent</th>
-                <th>Completion %</th>
-                <th>Last Activity</th>
-                <th>Course</th>
-                <th>Department</th>
-              </tr>
-            </thead>
-            <tbody>
-              {learners.map((l, i) => (
-                <tr key={i} className="border-b">
-                  <td className="py-2">{l.name}</td>
-                  <td>{l.email}</td>
-                  <td className="space-y-1">
-  {/* Learner overall status */}
-  <span
-    className={`px-2 py-1 text-xs rounded font-semibold inline-block ${
-      l.status === "passed"
-        ? "bg-green-100 text-green-700"
-        : l.status === "in_progress"
-        ? "bg-yellow-100 text-yellow-700"
-        : l.status === "enrolled"
-        ? "bg-blue-100 text-blue-700"
-        : "bg-red-100 text-red-700"
-    }`}
-  >
-    {l.status.replace("_", " ").toUpperCase()}
-  </span>
+         <table className="w-full text-sm">
+  <thead>
+    <tr className="border-b text-left">
+      <th className="py-2">Name</th>
+      <th>Email</th>
+      <th>Status</th>
+      <th>Score</th>
+      <th>Attempts</th>
+      <th>Hours Spent</th>
+      <th>Completion %</th>
+      <th>Last Activity</th>
+      <th>Course</th>
+      <th>Department</th>
+    </tr>
+  </thead>
+  <tbody>
+    {learners.map((l, i) => (
+      <tr key={i} className="border-b">
+        {/* Name */}
+        <td className="py-2">{l.name}</td>
 
-  {/* Course statuses */}
-  {l.courses && l.courses.length > 0 && (
-    <div className="space-y-1">
-      {l.courses.map((c) => (
-        <span
-          key={c.course_id}
-          className={`px-2 py-1 text-xs rounded font-semibold inline-block ${
-            c.status === "passed"
-              ? "bg-green-100 text-green-700"
-              : c.status === "in_progress"
-              ? "bg-yellow-100 text-yellow-700"
-              : c.status === "failed"
-              ? "bg-red-100 text-red-700"
-              : "bg-blue-100 text-blue-700"
-          }`}
-        >
-          {(c.graduation || c.status)
-            .replace("_", " ")
-            .toUpperCase()}
-        </span>
-      ))}
-    </div>
-  )}
-</td>
+        {/* Email */}
+        <td>{l.email}</td>
 
-                  <td>{l.score}%</td>
-                  <td>{l.attempts ?? 0}</td>
-                  <td>{(l.hours_spent ?? 0).toFixed(2)} hrs</td>
-                  <td>{l.progress_percentage ?? 0}%</td>
-                  <td>{l.last_activity ?? "-"}</td>
-                  <td>
-  {l.courses && l.courses.length > 0 ? (
-    <ul className="space-y-1">
-      {l.courses.map((c) => (
-        <li key={c.course_id} className="text-xs">
-          <span className="font-medium">{c.course_title}</span>
-          {/* <span className="ml-1 text-gray-500">
-            ({c.graduation || c.status})
-          </span> */}
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <span className="text-gray-400 text-xs">—</span>
-  )}
-</td>
-
-{/* <td>
-  {l.courses && l.courses.length > 0 ? (
-    <ul className="space-y-1">
-      {l.courses.map((c) => (
-        <li key={c.course_id} className="text-xs">
-          <span className="font-medium">{c.course_title}</span>
-          <span className="ml-1 text-gray-500">
-            ({c.graduation || c.status})
-          </span>
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <span className="text-gray-400 text-xs">—</span>
-  )}
-</td> */}
-
-<td>
-  {l.departments && l.departments.length > 0 ? (
-    <ul className="space-y-1">
-      {l.departments.map((d) => (
-        <li key={d.id} className="text-xs font-medium">
-          {d.name}
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <span className="text-gray-400 text-xs">—</span>
-  )}
-</td>
-
-
-                </tr>
+        {/* Status */}
+        <td className="space-y-1">
+          {l.courses && l.courses.length > 0 ? (
+            <div className="space-y-1">
+              {l.courses.map((c) => (
+                <span
+                  key={c.course_id}
+                  className={`px-2 py-1 text-xs rounded font-semibold inline-block ${
+                    c.status === "passed"
+                      ? "bg-green-100 text-green-700"
+                      : c.status === "in_progress"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : c.status === "failed"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-blue-100 text-blue-700"
+                  }`}
+                >
+                  {c.status.replace("_", " ").toUpperCase()}
+                </span>
               ))}
-            </tbody>
-          </table>
+            </div>
+          ) : (
+            <span className="px-2 py-1 text-xs rounded font-semibold inline-block bg-gray-100 text-gray-600">
+              {l.status.replace("_", " ").toUpperCase()}
+            </span>
+          )}
+        </td>
+
+        {/* Score */}
+        <td>{l.score}%</td>
+
+        {/* Attempts */}
+        <td>{l.attempts ?? 0}</td>
+
+        {/* Hours Spent */}
+        <td>{(l.hours_spent ?? 0).toFixed(2)} hrs</td>
+
+        {/* Completion % */}
+        <td>{l.progress_percentage ?? 0}%</td>
+
+        {/* Last Activity */}
+        <td>{l.last_activity ?? "-"}</td>
+
+        {/* Courses */}
+        <td>
+          {l.courses && l.courses.length > 0 ? (
+            <ul className="space-y-1">
+              {l.courses.map((c) => (
+                <li key={c.course_id} className="text-xs font-medium">
+                  {c.course_title}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <span className="text-gray-400 text-xs">—</span>
+          )}
+        </td>
+
+        {/* Departments */}
+        <td>
+          {l.departments && l.departments.length > 0 ? (
+            <ul className="space-y-1">
+              {l.departments.map((d) => (
+                <li key={d.id} className="text-xs font-medium">
+                  {d.name}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <span className="text-gray-400 text-xs">—</span>
+          )}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
 
           <div className="flex justify-between mt-4">
             <button
