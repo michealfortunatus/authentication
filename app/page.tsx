@@ -189,21 +189,22 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 }, [enrolledData, selectedCourseId, selectedDepartmentId]);
 
 const departmentChartData = useMemo(() => {
-  const map: Record<string, { enrolled: number; in_progress: number; passed: number }> = {};
+  const map: Record<string, { enrolled: number; in_progress: number; passed: number; failed: number; not_started: number }> = {};
 
-  learners.forEach((learner) => {
+  enrolledData?.learners.forEach((learner) => {
     learner.departments?.forEach((dept) => {
       if (!map[dept.name]) {
-        map[dept.name] = { enrolled: 0, in_progress: 0, passed: 0 };
+        map[dept.name] = { enrolled: 0, in_progress: 0, passed: 0, failed: 0, not_started: 0 };
       }
 
-      map[dept.name].enrolled += 1;
+      learner.courses?.forEach((course) => {
+        if (course.graduation === "passed") map[dept.name].passed += 1;
+        else if (course.status === "in_progress") map[dept.name].in_progress += 1;
+        else if (course.status === "failed") map[dept.name].failed += 1;
+        else map[dept.name].not_started += 1;
 
-      if (learner.status === "passed") {
-        map[dept.name].passed += 1;
-      } else if (learner.status === "in_progress") {
-        map[dept.name].in_progress += 1;
-      }
+        map[dept.name].enrolled += 1; // total courses count
+      });
     });
   });
 
@@ -211,7 +212,8 @@ const departmentChartData = useMemo(() => {
     name,
     ...counts,
   }));
-}, [learners]);
+}, [enrolledData]);
+
 
 
 
@@ -467,12 +469,15 @@ const notStartedCount = useMemo(() => {
                   <Tooltip />
 
                   <Bar dataKey="value" barSize={28}>
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
+  {chartData.map((entry) => {
+    let fill = "#2563eb"; // default enrolled / blue
+    if (entry.name === "Passed") fill = "#16a34a"; // green
+    else if (entry.name === "In Progress") fill = "#f59e0b"; // yellow
+    else if (entry.name === "Failed") fill = "#dc2626"; // red
+    return <Cell key={entry.name} fill={fill} />;
+  })}
+</Bar>
+
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -609,19 +614,20 @@ const notStartedCount = useMemo(() => {
             <div className="space-y-1">
               {l.courses.map((c) => (
                 <span
-                  key={c.course_id}
-                  className={`px-2 py-1 text-xs rounded font-semibold inline-block ${
-                    c.status === "passed"
-                      ? "bg-green-100 text-green-700"
-                      : c.status === "in_progress"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : c.status === "failed"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-blue-100 text-blue-700"
-                  }`}
-                >
-                  {c.status.replace("_", " ").toUpperCase()}
-                </span>
+  key={c.course_id}
+  className={`px-2 py-1 text-xs rounded font-semibold inline-block ${
+    c.graduation === "passed"
+      ? "bg-green-100 text-green-700"
+      : c.status === "in_progress"
+      ? "bg-yellow-100 text-yellow-700"
+      : c.status === "failed"
+      ? "bg-red-100 text-red-700"
+      : "bg-blue-100 text-blue-700"
+  }`}
+>
+  {c.status.replace("_", " ").toUpperCase()}
+</span>
+
               ))}
             </div>
           ) : (
