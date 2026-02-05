@@ -596,19 +596,47 @@ const notStartedCount = useMemo(() => {
                 <tr key={i} className="border-b">
                   <td className="py-2">{l.name}</td>
                   <td>{l.email}</td>
-                  <td>
-                    <span
-                      className={`px-2 py-1 text-xs rounded font-semibold ${l.status === "passed"
-                        ? "bg-green-100 text-green-700"
-                        : l.status === "in_progress"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : l.status === "enrolled"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-red-100 text-red-700"}`}
-                    >
-                      {l.status.replace("_", " ").toUpperCase()}
-                    </span>
-                  </td>
+                  <td className="space-y-1">
+  {/* Learner overall status */}
+  <span
+    className={`px-2 py-1 text-xs rounded font-semibold inline-block ${
+      l.status === "passed"
+        ? "bg-green-100 text-green-700"
+        : l.status === "in_progress"
+        ? "bg-yellow-100 text-yellow-700"
+        : l.status === "enrolled"
+        ? "bg-blue-100 text-blue-700"
+        : "bg-red-100 text-red-700"
+    }`}
+  >
+    {l.status.replace("_", " ").toUpperCase()}
+  </span>
+
+  {/* Course statuses */}
+  {l.courses && l.courses.length > 0 && (
+    <div className="space-y-1">
+      {l.courses.map((c) => (
+        <span
+          key={c.course_id}
+          className={`px-2 py-1 text-xs rounded font-semibold inline-block ${
+            c.status === "passed"
+              ? "bg-green-100 text-green-700"
+              : c.status === "in_progress"
+              ? "bg-yellow-100 text-yellow-700"
+              : c.status === "failed"
+              ? "bg-red-100 text-red-700"
+              : "bg-blue-100 text-blue-700"
+          }`}
+        >
+          {(c.graduation || c.status)
+            .replace("_", " ")
+            .toUpperCase()}
+        </span>
+      ))}
+    </div>
+  )}
+</td>
+
                   <td>{l.score}%</td>
                   <td>{l.attempts ?? 0}</td>
                   <td>{(l.hours_spent ?? 0).toFixed(2)} hrs</td>
