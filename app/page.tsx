@@ -441,12 +441,16 @@ const notStartedCount = useMemo(() => {
 
             <div className="h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
+                <BarChart data={chartData}
+                 margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                 barCategoryGap="40%"   // space between categories
+                barGap={6}             // space between bars
+                >
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
 
-                  <Bar dataKey="value" width="25%">
+                  <Bar dataKey="value" barSize={14}>
                     {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
