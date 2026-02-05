@@ -30,6 +30,17 @@ type Department = {
   name: string;
 };
 
+type DepartmentOption = {
+  id: string;
+  name: string;
+};
+
+type CourseOption = {
+  id: string;
+  title: string;
+};
+
+
 type LearnerCourse = {
   course_id: string;
   course_title: string;
@@ -76,8 +87,13 @@ type EnrolledResponse = {
     pass_mark: number;
     average_score: number;
     average_pass_score: number;
+
+
   };
   learners: Learner[];
+  departments: DepartmentOption[]; // ✅ added
+  courses: CourseOption[];         // ✅ added
+
   pagination: {
     page: number;
     per_page: number;
@@ -522,19 +538,11 @@ const notStartedCount = useMemo(() => {
   }}
 >
   <option value="all">All Courses</option>
-  {(() => {
-    const coursesMap: Record<string, string> = {};
-    learners.forEach((l) => {
-      l.courses?.forEach((c) => {
-        if (!coursesMap[c.course_id]) coursesMap[c.course_id] = c.course_title;
-      });
-    });
-    return Object.entries(coursesMap).map(([id, title]) => (
-      <option key={id} value={id}>
-        {title}
-      </option>
-    ));
-  })()}
+  {enrolledData?.courses.map((c: CourseOption) => (
+    <option key={c.id} value={c.id}>
+      {c.title}
+    </option>
+  ))}
 </select>
 
 {/* DEPARTMENT FILTER */}
@@ -547,20 +555,11 @@ const notStartedCount = useMemo(() => {
   }}
 >
   <option value="all">All Departments</option>
-  {(() => {
-    const deptMap: Record<string, string> = {};
-    enrolledData?.learners.forEach((l) => {
-      l.departments?.forEach((d) => {
-        if (!deptMap[d.id]) deptMap[d.id] = d.name;
-      });
-    });
-
-    return Object.entries(deptMap).map(([id, name]) => (
-      <option key={id} value={id}>
-        {name}
-      </option>
-    ));
-  })()}
+  {enrolledData?.departments.map((d: DepartmentOption) => (
+    <option key={d.id} value={d.id}>
+      {d.name}
+    </option>
+  ))}
 </select>
 
 
