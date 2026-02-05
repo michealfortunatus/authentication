@@ -571,12 +571,12 @@ const notStartedCount = useMemo(() => {
               >
                 <Download size={16} /> CSV
               </button>
-              <button
+              {/* <button
                 onClick={downloadPDF}
                 className="bg-gray-800 text-white px-4 py-2 rounded"
               >
                 <FileText size={16} /> PDF
-              </button>
+              </button> */}
             </div>
           </div>
 
