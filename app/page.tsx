@@ -252,7 +252,7 @@ const departmentChartData = useMemo(() => {
     );
 
     const hasInProgress = learner.courses?.some(
-      (c) => c.status === "in_progress"
+      (c) => c.status === "in-progress"
     );
 
     if (hasPassed) {
