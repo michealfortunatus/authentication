@@ -456,10 +456,10 @@ const downloadCSV = () => {
             <p className="text-2xl font-bold text-blue-600">{summaryData?.metrics.total_students ?? 0}</p>
           </div>
 
-          {/* <div className="bg-white p-4 rounded shadow">
+          <div className="bg-white p-4 rounded shadow">
                <p className="text-sm text-gray-500">Not Started</p>
                <p className="text-2xl font-bold text-blue-600">{notStartedCount}</p>
-          </div> */}
+          </div>
 
 
           <div className="bg-white p-4 rounded shadow">
@@ -481,17 +481,18 @@ const downloadCSV = () => {
             <p className="text-2xl font-bold text-green-600"> {summaryData?.metrics.passed ?? 0}</p>
           </div>
 
-          {/* <div className="bg-white p-4 rounded shadow">
-
-          </div> */}
+          <div className="bg-white p-4 rounded shadow">
+               <p className="text-sm text-gray-500">Failed</p>
+                <p className="text-2xl font-bold text-red-600">{failedCount}</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-1 gap-8">
           <div className="bg-white p-6 rounded shadow h-80">
             <h2 className="font-semibold mb-4">Learner Status (Pie)</h2>
 
             <div className="h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="50%" height="100%">
                 <PieChart>
                   <Pie
                     data={chartData}
