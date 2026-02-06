@@ -487,7 +487,7 @@ const downloadCSV = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
-          {/* <div className="bg-white p-6 rounded shadow h-80">
+          <div className="bg-white p-6 rounded shadow h-80">
             <h2 className="font-semibold mb-4">Learner Status (Pie)</h2>
 
             <div className="h-[240px]">
@@ -507,9 +507,9 @@ const downloadCSV = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-          </div> */}
+          </div>
 
-          <div className="bg-white p-6 rounded shadow h-80">
+          {/* <div className="bg-white p-6 rounded shadow h-80">
             <h2 className="font-semibold mb-4">Learner Status (Bar)</h2>
 
             <div className="h-[240px]">
@@ -536,7 +536,7 @@ const downloadCSV = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
+          </div> */}
 
           <div className="bg-white p-6 rounded shadow h-80">
   <h2 className="font-semibold mb-4">Learners by Department</h2>
