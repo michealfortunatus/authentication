@@ -158,11 +158,23 @@ const [addingAdmin, setAddingAdmin] = useState(false);
       .then((json: EnrolledResponse) => setEnrolledData(json))
       .catch(() => toast.error("Failed to fetch enrolled data"));
   }, [page, statusFilter, search, days]);
+ const [allLearners, setAllLearners] = useState<Learner[]>([]);
+
+  useEffect(() => {
+  fetch(`${ENROLLED_API}?page=1&per_page=10000&days=${days}`)
+    .then((res) => res.json())
+    .then((json: EnrolledResponse) => {
+      setAllLearners(json.learners || []);
+    })
+    .catch(() => toast.error("Failed to fetch department analytics"));
+}, [days]);
+
 
   const [selectedCourseId, setSelectedCourseId] = useState<string>("all");
 
   const inprogressCount = enrolledData?.metrics.in_progress ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
+
 
 const averageScore = enrolledData?.metrics.average_score ?? 0;
 const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
@@ -191,7 +203,7 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 const departmentChartData = useMemo(() => {
   if (!enrolledData) return [];
 
-  // init all departments (even empty ones)
+  // init all departments (always visible)
   const map: Record<string, {
     name: string;
     enrolled: number;
@@ -208,23 +220,33 @@ const departmentChartData = useMemo(() => {
     };
   });
 
-  // IMPORTANT: use ALL learners, not paginated view
-  enrolledData.learners.forEach((learner) => {
-    learner.departments?.forEach((dept) => {
-      learner.courses?.forEach((course) => {
-        map[dept.name].enrolled += 1;
+  allLearners.forEach((learner) => {
+  learner.departments?.forEach((dept) => {
+    const bucket = map[dept.name];
+    if (!bucket) return;
 
-        if (course.graduation === "passed") {
-          map[dept.name].passed += 1;
-        } else if (course.status === "in_progress") {
-          map[dept.name].in_progress += 1;
-        }
-      });
-    });
+    // ✅ count learner once per department
+    bucket.enrolled += 1;
+
+    const hasPassed = learner.courses?.some(
+      (c) => c.graduation === "passed"
+    );
+
+    const hasInProgress = learner.courses?.some(
+      (c) => c.status === "in_progress"
+    );
+
+    if (hasPassed) {
+      bucket.passed += 1;
+    } else if (hasInProgress) {
+      bucket.in_progress += 1;
+    }
   });
+});
+
 
   return Object.values(map);
-}, [enrolledData]);
+}, [allLearners, enrolledData?.departments]);
 
 
 
