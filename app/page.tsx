@@ -160,20 +160,39 @@ const [addingAdmin, setAddingAdmin] = useState(false);
   }, [page, statusFilter, search, days]);
  const [allLearners, setAllLearners] = useState<Learner[]>([]);
 
-  useEffect(() => {
-  fetch(`${ENROLLED_API}?page=1&per_page=10000&days=${days}`)
+//   useEffect(() => {
+//   fetch(`${ENROLLED_API}?page=1&per_page=10000&days=${days}`)
+//     .then((res) => res.json())
+//     .then((json: EnrolledResponse) => {
+//       setAllLearners(json.learners || []);
+//     })
+//     .catch(() => toast.error("Failed to fetch department analytics"));
+// }, [days]);
+
+ useEffect(() => {
+   fetch(`${ENROLLED_API}?page=1&per_page=1&days=${days}`)
+    .then((res) => res.json())
+     .then((json: EnrolledResponse) => setSummaryData(json))
+     .catch(() => toast.error("Failed to fetch summary metrics"));
+ }, [days]);
+
+// Full learners fetch for table and department chart
+useEffect(() => {
+  fetch(`${ENROLLED_API}?page=1&per_page=10000`)
     .then((res) => res.json())
     .then((json: EnrolledResponse) => {
       setAllLearners(json.learners || []);
+      setEnrolledData(json); // table depends on this
     })
-    .catch(() => toast.error("Failed to fetch department analytics"));
-}, [days]);
+    .catch(() => toast.error("Failed to fetch learners"));
+}, []);
 
 
   const [selectedCourseId, setSelectedCourseId] = useState<string>("all");
 
   const inprogressCount = enrolledData?.metrics.in_progress ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
+const [summaryData, setSummaryData] = useState<EnrolledResponse | null>(null);
 
 
 const averageScore = enrolledData?.metrics.average_score ?? 0;
@@ -429,12 +448,12 @@ const downloadCSV = () => {
         <div className="grid grid-cols-4 md:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded shadow">
             <p className="text-sm text-gray-500">Pass Mark</p>
-            <p className="text-2xl font-bold">{enrolledData?.metrics.pass_mark ?? 80}%</p>
+            <p className="text-2xl font-bold">{summaryData?.metrics.pass_mark ?? 80}%</p>
           </div>
 
           <div className="bg-white p-4 rounded shadow">
             <p className="text-sm text-gray-500">Enrolled</p>
-            <p className="text-2xl font-bold text-blue-600">{enrolledCount}</p>
+            <p className="text-2xl font-bold text-blue-600">{summaryData?.metrics.total_students ?? 0}</p>
           </div>
 
           {/* <div className="bg-white p-4 rounded shadow">
@@ -446,7 +465,7 @@ const downloadCSV = () => {
           <div className="bg-white p-4 rounded shadow">
                <p className="text-sm text-gray-500">In progress</p>
             <p className="text-2xl font-bold text-yellow-600">
-  {combinedInProgressCount}
+  {summaryData?.metrics.in_progress ?? 0}
 </p>
 
             {/* <p className="text-sm text-gray-500">In Progress</p>
@@ -459,7 +478,7 @@ const downloadCSV = () => {
 
           <div className="bg-white p-4 rounded shadow">
             <p className="text-sm text-gray-500">Passed</p>
-            <p className="text-2xl font-bold text-green-600">{passedCount}</p>
+            <p className="text-2xl font-bold text-green-600"> {summaryData?.metrics.passed ?? 0}</p>
           </div>
 
           {/* <div className="bg-white p-4 rounded shadow">
