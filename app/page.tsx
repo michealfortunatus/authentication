@@ -189,30 +189,43 @@ const averagePassScore = enrolledData?.metrics.average_pass_score ?? 0;
 }, [enrolledData, selectedCourseId, selectedDepartmentId]);
 
 const departmentChartData = useMemo(() => {
-  const map: Record<string, { enrolled: number; in_progress: number; passed: number; failed: number; not_started: number }> = {};
+  if (!enrolledData) return [];
 
-  enrolledData?.learners.forEach((learner) => {
+  // init all departments (even empty ones)
+  const map: Record<string, {
+    name: string;
+    enrolled: number;
+    in_progress: number;
+    passed: number;
+  }> = {};
+
+  enrolledData.departments.forEach((d) => {
+    map[d.name] = {
+      name: d.name,
+      enrolled: 0,
+      in_progress: 0,
+      passed: 0,
+    };
+  });
+
+  // IMPORTANT: use ALL learners, not paginated view
+  enrolledData.learners.forEach((learner) => {
     learner.departments?.forEach((dept) => {
-      if (!map[dept.name]) {
-        map[dept.name] = { enrolled: 0, in_progress: 0, passed: 0, failed: 0, not_started: 0 };
-      }
-
       learner.courses?.forEach((course) => {
-        if (course.graduation === "passed") map[dept.name].passed += 1;
-        else if (course.status === "in_progress") map[dept.name].in_progress += 1;
-        else if (course.status === "failed") map[dept.name].failed += 1;
-        else map[dept.name].not_started += 1;
+        map[dept.name].enrolled += 1;
 
-        map[dept.name].enrolled += 1; // total courses count
+        if (course.graduation === "passed") {
+          map[dept.name].passed += 1;
+        } else if (course.status === "in_progress") {
+          map[dept.name].in_progress += 1;
+        }
       });
     });
   });
 
-  return Object.entries(map).map(([name, counts]) => ({
-    name,
-    ...counts,
-  }));
+  return Object.values(map);
 }, [enrolledData]);
+
 
 
 
@@ -230,30 +243,31 @@ const notStartedCount = useMemo(() => {
 }, [inprogressCount, notStartedCount, failedCount]);
 
 
+const downloadCSV = () => {
+  const csv = Papa.unparse(
+    (enrolledData?.learners ?? []).map((l) => ({
+      name: l.name,
+      email: l.email,
+      status: l.status,
+      score: l.score,
+      hours_spent: l.hours_spent ?? 0,
+      attempts: l.attempts ?? 0,
+      progress_percentage: l.progress_percentage ?? 0,
+      last_activity: l.last_activity ?? "",
+      courses: l.courses?.map((c) => c.course_title).join(", ") ?? "",
+      departments: l.departments?.map(d => d.name).join(", ") ?? "",
+    }))
+  );
 
-  const downloadCSV = () => {
-    const csv = Papa.unparse(
-      learners.map((l) => ({
-        name: l.name,
-        email: l.email,
-        status: l.status,
-        score: l.score,
-        hours_spent: l.hours_spent ?? 0,
-        attempts: l.attempts ?? 0,
-        progress_percentage: l.progress_percentage ?? 0,
-        last_activity: l.last_activity ?? "",
-        courses: l.courses?.map((c) => c.course_title).join(", ") ?? ""
-      }))
-    );
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "learners.csv";
+  a.click();
+};
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "learners.csv";
-    a.click();
-  };
 
  const downloadPDF = () => {
   const doc = new jsPDF();
