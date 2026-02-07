@@ -256,10 +256,11 @@ const departmentChartData = useMemo(() => {
     );
 
     if (hasPassed) {
-      bucket.passed += 1;
-    } else if (hasInProgress) {
-      bucket.in_progress += 1;
-    }
+  bucket.passed += 1;
+} else {
+  bucket.in_progress += 1; // enrolled - passed
+}
+
   });
 });
 
@@ -272,16 +273,32 @@ const departmentChartData = useMemo(() => {
 
 
 
+// const notStartedCount = useMemo(() => {
+//   return learners.filter(l =>
+//     !l.courses || l.courses.every(c => c.status === "not_started" || !c.status)
+//   ).length;
+// }, [learners]);
+
 const notStartedCount = useMemo(() => {
-  return learners.filter(l =>
-    !l.courses || l.courses.every(c => c.status === "not_started" || !c.status)
-  ).length;
-}, [learners]);
+  const inProgress = enrolledData?.metrics.in_progress ?? 0;
+  const failed = enrolledData?.metrics.failed ?? 0;
+
+  return Math.max(inProgress - failed, 0);
+}, [enrolledData]);
+
   const totalPages = enrolledData?.pagination.total_pages ?? 1;
 
-  const combinedInProgressCount = useMemo(() => {
-  return inprogressCount + notStartedCount + failedCount;
-}, [inprogressCount, notStartedCount, failedCount]);
+//   const combinedInProgressCount = useMemo(() => {
+//   return inprogressCount + notStartedCount + failedCount;
+// }, [inprogressCount, notStartedCount, failedCount]);
+
+const combinedInProgressCount = useMemo(() => {
+  const enrolled = enrolledData?.metrics.total_students ?? 0;
+  const passed = enrolledData?.metrics.passed ?? 0;
+
+  return Math.max(enrolled - passed, 0);
+}, [enrolledData]);
+
 
 
 const downloadCSV = () => {
@@ -357,10 +374,25 @@ const downloadCSV = () => {
 
 
 
-  const chartData = useMemo(() => [
+//  const chartData = useMemo(() => [
+//   {
+//     name: "In Progress",
+//     value: combinedInProgressCount,
+//   },
+//   {
+//     name: "Passed",
+//     value: passedCount,
+//   },
+//   {
+//     name: "Enrolled",
+//     value: enrolledCount,
+//   },
+// ], [combinedInProgressCount, passedCount, enrolledCount]);
+
+const chartData = useMemo(() => [
   {
     name: "In Progress",
-    value: combinedInProgressCount, // ✅ merged value
+    value: combinedInProgressCount,
   },
   {
     name: "Passed",
@@ -371,6 +403,8 @@ const downloadCSV = () => {
     value: enrolledCount,
   },
 ], [combinedInProgressCount, passedCount, enrolledCount]);
+
+
 
 
   const handleLogout = async () => {
