@@ -193,6 +193,13 @@ useEffect(() => {
   const inprogressCount = enrolledData?.metrics.in_progress ?? 0;
   const enrolledCount = enrolledData?.metrics.total_students ?? 0;
 const [summaryData, setSummaryData] = useState<EnrolledResponse | null>(null);
+const summaryEnrolled = summaryData?.metrics.total_students ?? 0;
+const summaryPassed = summaryData?.metrics.passed ?? 0;
+const summaryFailed = summaryData?.metrics.failed ?? 0;
+
+const summaryInProgress = Math.max(summaryEnrolled - summaryPassed, 0);
+const summaryNotStarted = Math.max(summaryInProgress - summaryFailed, 0);
+
 
 
 const averageScore = enrolledData?.metrics.average_score ?? 0;
@@ -492,14 +499,14 @@ const chartData = useMemo(() => [
 
           <div className="bg-white p-4 rounded shadow">
                <p className="text-sm text-gray-500">Not Started</p>
-               <p className="text-2xl font-bold text-blue-600">{notStartedCount}</p>
+               <p className="text-2xl font-bold text-blue-600">{summaryNotStarted}</p>
           </div>
 
 
           <div className="bg-white p-4 rounded shadow">
                <p className="text-sm text-gray-500">In progress</p>
             <p className="text-2xl font-bold text-yellow-600">
-  {summaryData?.metrics.in_progress ?? 0}
+  {summaryInProgress}
 </p>
 
             {/* <p className="text-sm text-gray-500">In Progress</p>
