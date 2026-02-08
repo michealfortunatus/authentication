@@ -299,6 +299,12 @@ const notStartedCount = useMemo(() => {
 //   return inprogressCount + notStartedCount + failedCount;
 // }, [inprogressCount, notStartedCount, failedCount]);
 
+const pieEnrolled = summaryData?.metrics.total_students ?? 0;
+const piePassed = summaryData?.metrics.passed ?? 0;
+
+const pieInProgress = Math.max(pieEnrolled - piePassed, 0);
+
+
 const combinedInProgressCount = useMemo(() => {
   const enrolled = enrolledData?.metrics.total_students ?? 0;
   const passed = enrolledData?.metrics.passed ?? 0;
@@ -396,20 +402,37 @@ const downloadCSV = () => {
 //   },
 // ], [combinedInProgressCount, passedCount, enrolledCount]);
 
+// const chartData = useMemo(() => [
+//   {
+//     name: "In Progress",
+//     value: combinedInProgressCount,
+//   },
+//   {
+//     name: "Passed",
+//     value: passedCount,
+//   },
+//   {
+//     name: "Enrolled",
+//     value: enrolledCount,
+//   },
+// ], [combinedInProgressCount, passedCount, enrolledCount]);
+
+
 const chartData = useMemo(() => [
   {
     name: "In Progress",
-    value: combinedInProgressCount,
+    value: pieInProgress,
   },
   {
     name: "Passed",
-    value: passedCount,
+    value: piePassed,
   },
   {
     name: "Enrolled",
-    value: enrolledCount,
+    value: pieEnrolled,
   },
-], [combinedInProgressCount, passedCount, enrolledCount]);
+], [pieInProgress, piePassed, pieEnrolled]);
+
 
 
 
@@ -627,7 +650,7 @@ const chartData = useMemo(() => [
   <option value="all">Enrolled</option>
   <option value="passed">Passed</option>
   <option value="failed">Failed</option>
-  <option value="in_progress">In progress</option>
+  {/* <option value="in_progress">In progress</option> */}
 </select>
 
 {/* COURSE FILTER */}
